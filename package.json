@@ -23,5 +23,9 @@
   "homepage": "https://github.com/StephanHoyer/fnorm",
   "devDependencies": {
     "mocha": "^2.3.2"
+  },
+  "dependencies": {
+    "expect.js": "^0.3.1",
+    "immutable": "^3.7.5"
   }
 }
