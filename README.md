@@ -1,8 +1,8 @@
-# fnorm - a functional ORM
+# fnORM - a functional ORM
 
-Let's face it Node's ORM are crap. Mostly at least. But JavaScript is an awesome language. So why. Because we did it wrong. To much class-ish stuff like backbone.
+Let's face it: Node's ORMs are crap. Mostly at least. But JavaScript is an awesome language. So why. Because we did it wrong. To much class-ish stuff like backbone.
 
-We want ti fix this. This is the first idea for the API:
+We want to fix this. This is the first idea for the API:
 
 ## Initialisation
 ```javascript
