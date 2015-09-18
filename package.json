@@ -1,0 +1,27 @@
+{
+  "name": "fnorm",
+  "version": "0.0.1",
+  "description": "functional ORM",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha **/*.test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/StephanHoyer/fnorm.git"
+  },
+  "keywords": [
+    "ORM",
+    "functional",
+    "DB"
+  ],
+  "author": "Stephan Hoyer <ste.hoyer@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/StephanHoyer/fnorm/issues"
+  },
+  "homepage": "https://github.com/StephanHoyer/fnorm",
+  "devDependencies": {
+    "mocha": "^2.3.2"
+  }
+}
