@@ -1,3 +1,5 @@
+'use strict';
+
 var Immutable = require('immutable');
 var iMap = Immutable.Map;
 var iList = Immutable.List;

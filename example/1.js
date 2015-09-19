@@ -1,6 +1,12 @@
+'use strict';
+
 var fnORM = require('../src');
 var groupBy = require('lodash/collection/groupBy');
 var Promise = require('bluebird');
+
+function getId(entity) {
+  return entity.id;
+}
 
 var memDB = {
   user: [
@@ -27,7 +33,7 @@ function runQuery(options) {
   });
 }
 
-store = fnORM(runQuery, {
+var store = fnORM(runQuery, {
   methods: {
     groupBy: groupBy
   }
@@ -35,14 +41,6 @@ store = fnORM(runQuery, {
 
 var userQuery = store('user');
 var commentQuery = store('comment');
-
-userQuery.withRelated(comments).then(function(user) {
-  console.log(user);
-});
-
-function getId(entity) {
-  return entity.id;
-}
 
 function comments(users) {
   return commentQuery
@@ -55,3 +53,8 @@ function comments(users) {
       });
     });
 }
+
+userQuery.withRelated(comments).then(function(user) {
+  console.log(user);
+});
+

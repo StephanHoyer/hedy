@@ -1,3 +1,5 @@
+'use strict';
+
 var expect = require('expect.js');
 var fnORM = require('./index');
 var Promise = require('bluebird');
@@ -108,7 +110,7 @@ describe('basics', function() {
   });
 
   it('should allow to catch errors thrown in runner calling `then` on query object', function() {
-    store = fnORM(function run(options) {
+    store = fnORM(function run() {
       throw new Error('eeck');
     });
     return store('user').then(noop, function(error) {
@@ -117,7 +119,7 @@ describe('basics', function() {
   });
 
   it('should allow to catch errors thrown in runner calling `then` on query object', function() {
-    store = fnORM(function run(options) {
+    store = fnORM(function run() {
       throw new Error('eeck');
     });
     return store('user').catch(function(error) {
