@@ -69,14 +69,14 @@ module.exports = function(runQuery) {
 
       then: function(resolve, reject) {
         return Promise
-          .resolve(options)
+          .resolve(options.toJS())
           .then(runQuery)
           .then(resolve, reject);
       },
 
       catch: function(reject) {
         return Promise
-          .resolve(options)
+          .resolve(options.toJS())
           .then(runQuery)
           .catch(reject);
       }

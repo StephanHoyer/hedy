@@ -28,22 +28,22 @@ describe('basics', function() {
     return store('user', {
       pk: 'hulu'
     }).then(function(options) {
-      expect(options.get('tableOptions').get('pk')).to.be('hulu');
-      expect(options.get('tableName')).to.be('user');
+      expect(options.tableOptions.pk).to.be('hulu');
+      expect(options.tableName).to.be('user');
     });
   });
 
   it('should create a query to fetch array of items from store', function() {
     return store('user').then(function(options) {
-      expect(options.get('returnArray')).to.be(true);
+      expect(options.returnArray).to.be(true);
     });
   });
 
   it('should create a query to fetch one item from store', function() {
     return store('user').get(123).then(function(options) {
-      expect(options.get('limit')).to.be(1);
-      expect(options.get('returnArray')).to.be(false);
-      expect(options.getIn(['where', 'id'])).to.be(123);
+      expect(options.limit).to.be(1);
+      expect(options.returnArray).to.be(false);
+      expect(options.where.id).to.be(123);
     });
   });
 
@@ -51,29 +51,29 @@ describe('basics', function() {
     return store('user').where({
       huhu: 'haha'
     }).then(function(options) {
-      expect(options.get('returnArray')).to.be(true);
-      expect(options.getIn(['where', 'huhu'])).to.be('haha');
+      expect(options.returnArray).to.be(true);
+      expect(options.where.huhu).to.be('haha');
     });
   });
 
   it('should create a count request', function() {
     return store('user').count().then(function(options) {
-      expect(options.get('count')).to.be(true);
+      expect(options.count).to.be(true);
     });
   });
 
   it('should create a query with map functions', function() {
     return store('user').map(getId).then(function(options) {
-      expect(options.get('handler').size).to.be(1);
+      expect(options.handler).to.have.length(1);
     });
   });
 
   it('should create a query with multiple functions', function() {
     return store('user').map(getId).filter(isFoo).then(function(options) {
-      expect(options.get('handler').size).to.be(2);
+      expect(options.handler).to.have.length(2);
 
-      var getIdHandler = options.getIn(['handler', 0]);
-      var isFooHandler = options.getIn(['handler', 1]);
+      var getIdHandler = options.handler[0];
+      var isFooHandler = options.handler[1];
 
       expect(getIdHandler([{id: 'huhu'}])[0]).to.be('huhu');
       expect(isFooHandler([{isFoo: false}, {isFoo: true}])).have.length(1);
@@ -89,15 +89,15 @@ describe('basics', function() {
     });
 
     return query.fooify('superman').then(function(options) {
-      expect(options.get('handler').size).to.be(1);
-      var fooifyer = options.getIn(['handler', 0]);
+      expect(options.handler).to.have.length(1);
+      var fooifyer = options.handler[0];
       expect(fooifyer({}).foo).to.be('superman');
     });
   });
 
   it('should run query when calling `then` on query object', function() {
     store = fnORM(function run(options) {
-      expect(options.get('tableName')).to.be('user');
+      expect(options.tableName).to.be('user');
       return 'user';
     });
     return store('user').then(function(user) {
@@ -134,20 +134,20 @@ describe('relations', function() {
 
   it('allow to add relations to query', function() {
     return store('user').withRelated('friends').then(function(options) {
-      expect(options.getIn(['withRelated', 0])).to.be('friends');
+      expect(options.withRelated[0]).to.be('friends');
     });
   });
 
   it('allow to add multiple relations at once to query', function() {
     return store('user').withRelated(['friends', 'comments']).then(function(options) {
-      expect(options.getIn(['withRelated', 0])).to.be('friends');
-      expect(options.getIn(['withRelated', 1])).to.be('comments');
+      expect(options.withRelated[0]).to.be('friends');
+      expect(options.withRelated[1]).to.be('comments');
     });
   });
   it('allow to add multiple relations sequentially to query', function() {
     return store('user').withRelated('friends').withRelated('comments').then(function(options) {
-      expect(options.getIn(['withRelated', 0])).to.be('friends');
-      expect(options.getIn(['withRelated', 1])).to.be('comments');
+      expect(options.withRelated[0]).to.be('friends');
+      expect(options.withRelated[1]).to.be('comments');
     });
   });
 });
