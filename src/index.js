@@ -29,7 +29,6 @@ module.exports = function(runQuery) {
 
     return {
       _attachHandler: attachHandler,
-      _options: options,
 
       get: function(id) {
         return query(options.merge({
