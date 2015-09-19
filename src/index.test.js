@@ -66,23 +66,23 @@ describe('basics', function() {
 
   it('should create a query with map functions', function() {
     return store('user').map(getId).then(function(options) {
-      expect(options.handler).to.have.length(1);
+      expect(options.converter).to.have.length(1);
     });
   });
 
   it('should create a query with multiple functions', function() {
     return store('user').map(getId).filter(isFoo).then(function(options) {
-      expect(options.handler).to.have.length(2);
+      expect(options.converter).to.have.length(2);
 
-      var getIdHandler = options.handler[0];
-      var isFooHandler = options.handler[1];
+      var getIdconverter = options.converter[0];
+      var isFooconverter = options.converter[1];
 
-      expect(getIdHandler([{id: 'huhu'}])[0]).to.be('huhu');
-      expect(isFooHandler([{isFoo: false}, {isFoo: true}])).have.length(1);
+      expect(getIdconverter([{id: 'huhu'}])[0]).to.be('huhu');
+      expect(isFooconverter([{isFoo: false}, {isFoo: true}])).have.length(1);
     });
   });
 
-  it('should be possible to add own handler functions', function() {
+  it('should be possible to add own converter functions', function() {
     store = fnORM(identity, {
       methods: {
         fooify: function(result, arg) {
@@ -93,8 +93,8 @@ describe('basics', function() {
     });
 
     return store('user').map(identity).fooify('superman').then(function(options) {
-      expect(options.handler).to.have.length(2);
-      var fooifyer = options.handler[1];
+      expect(options.converter).to.have.length(2);
+      var fooifyer = options.converter[1];
       expect(fooifyer({}).foo).to.be('superman');
     });
   });

@@ -21,9 +21,9 @@ function isArray(thing) {
   return Object.prototype.toString.call(thing) === '[object Array]';
 }
 
-module.exports = function(runQuery, ormOptions) {
+module.exports = function(runQuery, options) {
 
-  ormOptions = merge({
+  options = merge({
     methods: {
       filter: function(result, fn) {
         return result.filter(fn);
@@ -33,15 +33,15 @@ module.exports = function(runQuery, ormOptions) {
         return result.map(fn);
       },
     }
-  }, ormOptions);
+  }, options);
 
-  function query(options) {
+  function evolve(query) {
 
-    function attachHandler(handler) {
+    function attachconverter(converter) {
       return function(fn) {
-        return query(options.updateIn(['handler'], function(handlers) {
-          return handlers.push(function(result) {
-            return handler(result, fn);
+        return evolve(query.updateIn(['converter'], function(converters) {
+          return converters.push(function(result) {
+            return converter(result, fn);
           });
         }));
       };
@@ -49,19 +49,19 @@ module.exports = function(runQuery, ormOptions) {
 
     var api = {
       get: function(id) {
-        return query(options.merge({
+        return evolve(query.merge({
           limit: 1,
           returnArray: false,
-          where: zip(options.get('tableOptions').get('pk'), id)
+          where: zip(query.getIn(['tableOptions', 'pk']), id)
         }));
       },
 
       where: function(where) {
-        return query(options.set('where', iMap(where)));
+        return evolve(query.set('where', iMap(where)));
       },
 
       withRelated: function(relation) {
-        return query(options.updateIn(['withRelated'], function(withRelated) {
+        return evolve(query.updateIn(['withRelated'], function(withRelated) {
           if (isArray(relation)) {
             return withRelated.concat(relation);
           }
@@ -70,36 +70,36 @@ module.exports = function(runQuery, ormOptions) {
       },
 
       count: function() {
-        return query(options.set('count', true));
+        return evolve(query.set('count', true));
       },
 
       then: function(resolve, reject) {
         return Promise
-          .resolve(options.toJS())
+          .resolve(query.toJS())
           .then(runQuery)
           .then(resolve, reject);
       },
 
       catch: function(reject) {
         return Promise
-          .resolve(options.toJS())
+          .resolve(query.toJS())
           .then(runQuery)
           .catch(reject);
       }
     };
 
-    map(ormOptions.methods, function(method, name) {
-      api[name] = attachHandler(method);
+    map(options.methods, function(method, name) {
+      api[name] = attachconverter(method);
     });
 
     return api;
   }
 
-  function store(tableName, options) {
-    return query(iMap({
+  function store(tableName, query) {
+    return evolve(iMap({
       tableName: tableName,
-      tableOptions: defaultTableOptions.merge(options),
-      handler: iList(),
+      tableOptions: defaultTableOptions.merge(query),
+      converter: iList(),
       withRelated: iList(),
       returnArray: true
     }));
