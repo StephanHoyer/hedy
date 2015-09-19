@@ -27,6 +27,7 @@ module.exports = function(config) {
     }
 
     return {
+      _attachHandler: attachHandler,
       _options: options,
 
       get: function(id) {

@@ -59,4 +59,20 @@ describe('init', function() {
     expect(getIdHandler([{id: 'huhu'}])[0]).to.be('huhu');
     expect(isFooHandler([{isFoo: false}, {isFoo: true}])).have.length(1);
   });
+
+  it('should be possible to add own handler functions', function() {
+    var query = store('user');
+    query.fooify = query._attachHandler(function(result, arg) {
+      result.foo = arg;
+      return result;
+    });
+
+    query = query.fooify('superman');
+    expect(query._options.get('handler').size).to.be(1);
+
+    var fooifyer = query._options.getIn(['handler', 0]);
+
+    expect(fooifyer([{}]).foo).to.be('superman');
+  });
+
 });
