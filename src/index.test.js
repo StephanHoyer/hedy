@@ -16,11 +16,11 @@ function isFoo(item) {
   return item.isFoo;
 }
 
-describe('init', function() {
+describe('basics', function() {
   var store;
 
   beforeEach(function() {
-    // for testing we simple forward the query options as result of the query
+    // for testing we simply forward the query options as result of the query
     store = fnORM(identity);
   });
 
@@ -120,6 +120,34 @@ describe('init', function() {
     });
     return store('user').catch(function(error) {
       expect(error.message).to.be('eeck');
+    });
+  });
+});
+
+describe('relations', function() {
+  var store;
+
+  beforeEach(function() {
+    // for testing we simply forward the query options as result of the query
+    store = fnORM(identity);
+  });
+
+  it('allow to add relations to query', function() {
+    return store('user').withRelated('friends').then(function(options) {
+      expect(options.getIn(['withRelated', 0])).to.be('friends');
+    });
+  });
+
+  it('allow to add multiple relations at once to query', function() {
+    return store('user').withRelated(['friends', 'comments']).then(function(options) {
+      expect(options.getIn(['withRelated', 0])).to.be('friends');
+      expect(options.getIn(['withRelated', 1])).to.be('comments');
+    });
+  });
+  it('allow to add multiple relations sequentially to query', function() {
+    return store('user').withRelated('friends').withRelated('comments').then(function(options) {
+      expect(options.getIn(['withRelated', 0])).to.be('friends');
+      expect(options.getIn(['withRelated', 1])).to.be('comments');
     });
   });
 });

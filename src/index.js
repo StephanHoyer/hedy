@@ -13,6 +13,10 @@ var zip = function(key, value) {
   return obj;
 };
 
+function isArray(thing) {
+  return Object.prototype.toString.call(thing) === '[object Array]';
+}
+
 module.exports = function(runQuery) {
 
   function query(options) {
@@ -40,6 +44,15 @@ module.exports = function(runQuery) {
 
       where: function(where) {
         return query(options.set('where', iMap(where)));
+      },
+
+      withRelated: function(relation) {
+        return query(options.updateIn(['withRelated'], function(withRelated) {
+          if (isArray(relation)) {
+            return withRelated.concat(relation);
+          }
+          return withRelated.push(relation);
+        }));
       },
 
       count: function() {
@@ -75,6 +88,7 @@ module.exports = function(runQuery) {
       tableName: tableName,
       tableOptions: defaultTableOptions.merge(options),
       handler: iList(),
+      withRelated: iList(),
       returnArray: true
     }));
   }
