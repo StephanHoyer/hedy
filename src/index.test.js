@@ -2,6 +2,8 @@ var expect = require('expect.js');
 var fnORM = require('./index');
 var Promise = require('bluebird');
 
+function noop() {}
+
 function identity(val) {
   return val;
 }
@@ -93,7 +95,7 @@ describe('init', function() {
     });
   });
 
-  it('should run query when calling then on query object', function() {
+  it('should run query when calling `then` on query object', function() {
     store = fnORM(function run(options) {
       expect(options.get('tableName')).to.be('user');
       return 'user';
@@ -103,4 +105,21 @@ describe('init', function() {
     });
   });
 
+  it('should allow to catch errors thrown in runner calling `then` on query object', function() {
+    store = fnORM(function run(options) {
+      throw new Error('eeck');
+    });
+    return store('user').then(noop, function(error) {
+      expect(error.message).to.be('eeck');
+    });
+  });
+
+  it('should allow to catch errors thrown in runner calling `then` on query object', function() {
+    store = fnORM(function run(options) {
+      throw new Error('eeck');
+    });
+    return store('user').catch(function(error) {
+      expect(error.message).to.be('eeck');
+    });
+  });
 });

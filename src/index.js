@@ -59,6 +59,13 @@ module.exports = function(runQuery) {
           .resolve(options)
           .then(runQuery)
           .then(resolve, reject);
+      },
+
+      catch: function(reject) {
+        return Promise
+          .resolve(options)
+          .then(runQuery)
+          .catch(reject);
       }
     };
   }
