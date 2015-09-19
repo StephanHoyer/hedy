@@ -1,17 +1,12 @@
 var expect = require('expect.js');
 var fnORM = require('./index');
+var Promise = require('bluebird');
 
 describe('init', function() {
   var store;
 
   beforeEach(function() {
-    var dbConfig = {
-      client: 'sqlite3',
-      connection: {
-        filename: "/tmp/fnorm.test.sqlite"
-      }
-    };
-    store = fnORM(dbConfig);
+    store = fnORM();
   });
 
   it('should allow to create user store', function() {
@@ -40,6 +35,11 @@ describe('init', function() {
     });
     expect(query._options.get('returnArray')).to.be(true);
     expect(query._options.getIn(['where', 'huhu'])).to.be('haha');
+  });
+
+  it('should create a count request', function() {
+    var query = store('user').count();
+    expect(query._options.get('count')).to.be(true);
   });
 
   it('should create a query with map/filter funcions', function() {
@@ -73,6 +73,17 @@ describe('init', function() {
     var fooifyer = query._options.getIn(['handler', 0]);
 
     expect(fooifyer([{}]).foo).to.be('superman');
+  });
+
+  it('should run query when calling then on query object', function(done) {
+    store = fnORM(function(query) {
+      return 'user';
+      return Promise.resolve('user');
+    });
+    var query = store('user').then(function(user) {
+      expect(user).to.be('user');
+      done();
+    });
   });
 
 });

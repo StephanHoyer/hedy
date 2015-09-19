@@ -1,6 +1,7 @@
 var Immutable = require('immutable');
 var iMap = Immutable.Map;
 var iList = Immutable.List;
+var Promise = require('bluebird');
 
 var defaultTableOptions = Immutable.Map({
   pk: 'id'
@@ -12,7 +13,7 @@ var zip = function(key, value) {
   return obj;
 };
 
-module.exports = function(config) {
+module.exports = function(runQuery) {
 
   function query(options) {
 
@@ -39,9 +40,11 @@ module.exports = function(config) {
       },
 
       where: function(where) {
-        return query(options.merge({
-          where: where
-        }));
+        return query(options.set('where', iMap(where)));
+      },
+
+      count: function() {
+        return query(options.set('count', true));
       },
 
       filter: attachHandler(function(result, fn) {
@@ -50,7 +53,14 @@ module.exports = function(config) {
 
       map: attachHandler(function(result, fn) {
         return result.map(fn);
-      })
+      }),
+
+      then: function(resolve, reject) {
+        return Promise
+          .resolve(options)
+          .then(runQuery)
+          .then(resolve, reject);
+      }
     };
   }
 
