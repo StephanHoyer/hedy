@@ -81,16 +81,18 @@ describe('basics', function() {
   });
 
   it('should be possible to add own handler functions', function() {
-    var query = store('user');
-
-    query.fooify = query._attachHandler(function(result, arg) {
-      result.foo = arg;
-      return result;
+    store = fnORM(identity, {
+      methods: {
+        fooify: function(result, arg) {
+          result.foo = arg;
+          return result;
+        }
+      }
     });
 
-    return query.fooify('superman').then(function(options) {
-      expect(options.handler).to.have.length(1);
-      var fooifyer = options.handler[0];
+    return store('user').map(identity).fooify('superman').then(function(options) {
+      expect(options.handler).to.have.length(2);
+      var fooifyer = options.handler[1];
       expect(fooifyer({}).foo).to.be('superman');
     });
   });

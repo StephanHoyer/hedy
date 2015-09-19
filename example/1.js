@@ -1,4 +1,6 @@
 var fnORM = require('../src');
+var groupBy = require('lodash/collection/groupBy');
+var Promise = require('bluebird');
 
 var memDB = {
   user: [
@@ -6,7 +8,7 @@ var memDB = {
     { id: 2, name: 'klaus' },
     { id: 3, name: 'manfred' }
   ],
-  comments: [
+  comment: [
     { id: 1, userId: 2, text: 'gorgeous' },
     { id: 2, userId: 3, text: 'nice' },
     { id: 4, userId: 1, text: 'splended' },
@@ -14,19 +16,36 @@ var memDB = {
   ]
 };
 
-function query(options) {
-  console.log(options);
-  return memDB[options.tableName];
+function runQuery(options) {
+  var list = memDB[options.tableName];
+  return Promise.all(options.withRelated.map(function(relation) {
+    return relation(list);
+  })).then(function() {
+    return Promise.reduce(options.handler, function(list, handler) {
+      return handler(list);
+    }, list);
+  });
 }
 
-store = fnORM(query);
+store = fnORM(runQuery, {
+  methods: {
+    groupBy: groupBy
+  }
+});
 
-store('user').withRelated(comments).then(function(user) {
+var userQuery = store('user');
+var commentQuery = store('comment');
+
+userQuery.withRelated(comments).then(function(user) {
   console.log(user);
 });
 
+function getId(entity) {
+  return entity.id;
+}
+
 function comments(users) {
-  return store('comment')
+  return commentQuery
     .where({ userId: users.map(getId) })
     .groupBy('userId')
     .then(function(commentsByUserId) {

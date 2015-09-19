@@ -2,6 +2,8 @@ var Immutable = require('immutable');
 var iMap = Immutable.Map;
 var iList = Immutable.List;
 var Promise = require('bluebird');
+var merge = require('lodash/object/merge');
+var map = require('lodash/collection/map');
 
 var defaultTableOptions = Immutable.Map({
   pk: 'id'
@@ -17,7 +19,19 @@ function isArray(thing) {
   return Object.prototype.toString.call(thing) === '[object Array]';
 }
 
-module.exports = function(runQuery) {
+module.exports = function(runQuery, ormOptions) {
+
+  ormOptions = merge({
+    methods: {
+      filter: function(result, fn) {
+        return result.filter(fn);
+      },
+
+      map: function(result, fn) {
+        return result.map(fn);
+      },
+    }
+  }, ormOptions);
 
   function query(options) {
 
@@ -31,9 +45,7 @@ module.exports = function(runQuery) {
       };
     }
 
-    return {
-      _attachHandler: attachHandler,
-
+    var api = {
       get: function(id) {
         return query(options.merge({
           limit: 1,
@@ -59,14 +71,6 @@ module.exports = function(runQuery) {
         return query(options.set('count', true));
       },
 
-      filter: attachHandler(function(result, fn) {
-        return result.filter(fn);
-      }),
-
-      map: attachHandler(function(result, fn) {
-        return result.map(fn);
-      }),
-
       then: function(resolve, reject) {
         return Promise
           .resolve(options.toJS())
@@ -81,6 +85,12 @@ module.exports = function(runQuery) {
           .catch(reject);
       }
     };
+
+    map(ormOptions.methods, function(method, name) {
+      api[name] = attachHandler(method);
+    });
+
+    return api;
   }
 
   function store(tableName, options) {
