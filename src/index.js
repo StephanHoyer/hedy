@@ -73,6 +73,20 @@ module.exports = function(runQuery, options) {
         return evolve(query.set('count', true));
       },
 
+      save: function(id, data) {
+        if (data) {
+          return evolve(query.merge({
+            type: 'update',
+            updateId: id,
+            saveData: data
+          }));
+        }
+        return evolve(query.merge({
+          type: 'create',
+          saveData: id
+        }));
+      },
+
       then: function(resolve, reject) {
         return Promise
           .resolve(query.toJS())

@@ -64,13 +64,30 @@ describe('basics', function() {
     });
   });
 
-  it('should create a query with map functions', function() {
+  it('should create an update request', function() {
+    var newData = { foo: 'bar' };
+    return store('user').save(123, newData).then(function(options) {
+      expect(options.type).to.be('update');
+      expect(options.saveData).to.eql(newData);
+      expect(options.updateId).to.be(123);
+    });
+  });
+
+  it('should create an create request', function() {
+    var newData = { foo: 'bar' };
+    return store('user').save(newData).then(function(options) {
+      expect(options.saveData).to.eql(newData);
+      expect(options.type).to.be('create');
+    });
+  });
+
+  it('should create a query with map converter function', function() {
     return store('user').map(getId).then(function(options) {
       expect(options.converter).to.have.length(1);
     });
   });
 
-  it('should create a query with multiple functions', function() {
+  it('should create a query with multiple converter functions', function() {
     return store('user').map(getId).filter(isFoo).then(function(options) {
       expect(options.converter).to.have.length(2);
 
