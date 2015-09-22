@@ -1,5 +1,5 @@
 {
-  "name": "fnorm",
+  "name": "hedy",
   "version": "0.0.1",
   "description": "functional ORM",
   "main": "index.js",
@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/StephanHoyer/fnorm.git"
+    "url": "https://github.com/StephanHoyer/hedy.git"
   },
   "keywords": [
     "ORM",
@@ -20,13 +20,13 @@
   "bugs": {
     "url": "https://github.com/StephanHoyer/fnorm/issues"
   },
-  "homepage": "https://github.com/StephanHoyer/fnorm",
+  "homepage": "https://github.com/StephanHoyer/hedy",
   "devDependencies": {
-    "mocha": "^2.3.2"
+    "mocha": "^2.3.2",
+    "expect.js": "^0.3.1"
   },
   "dependencies": {
     "bluebird": "^2.10.0",
-    "expect.js": "^0.3.1",
     "immutable": "^3.7.5",
     "lodash": "^3.10.1"
   }
