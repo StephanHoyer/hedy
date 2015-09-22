@@ -4,7 +4,7 @@
   "description": "functional ORM",
   "main": "index.js",
   "scripts": {
-    "test": "mocha **/*.test.js"
+    "test": "mocha src/**/*.test.js"
   },
   "repository": {
     "type": "git",
@@ -28,6 +28,7 @@
   "dependencies": {
     "bluebird": "^2.10.0",
     "immutable": "^3.7.5",
-    "lodash": "^3.10.1"
+    "lodash": "^3.10.1",
+    "pluralize": "^1.2.1"
   }
 }

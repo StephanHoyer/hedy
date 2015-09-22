@@ -2,6 +2,7 @@
 
 var merge = require('lodash/object/merge');
 var zip = require('./util').zip;
+var pluralize = require('pluralize');
 
 const get = key => (entity => entity[key]);
 
@@ -27,7 +28,7 @@ function belongsTo(query, options) {
 function hasMany(query, options) {
   return function(list, parentQuery) {
     options = merge({
-      relationKey: query.table(),
+      relationKey: pluralize(query.table()),
       fk: parentQuery.tableName + 'Id',
       pk: query.pk()
     }, options);
