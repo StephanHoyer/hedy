@@ -39,7 +39,7 @@ Unter the hood this is done using
 ## Fetch array of things
 
 ```javascript
-userStore.where(where).then(function(users) {
+userQuery.where(where).then(function(users) {
   // Array of POJOs containing user data
 });
 ```
@@ -51,7 +51,7 @@ There are also some utility functions that might be usefull. They can be called
 on the query without actually fetching it.
 
 ```javascript
-userStore.where(where).map(fn1).filter(fn2).then(function(users) {
+userQuery.where(where).map(fn1).filter(fn2).then(function(users) {
   // Array of POJOs containing user data
 });
 ```
@@ -62,7 +62,7 @@ they are applied to the query. They may return a promise.
 Because all that is lazy you might do the following:
 
 ```javascript
-var usersWithLongNames = userStore.filter(function(user) {
+var usersWithLongNames = userQuery.filter(function(user) {
   return user.name.length > 10;
 })
 
@@ -104,7 +104,7 @@ In this case we add the `pluck`-function of
 [lodash](https://lodash.com/docs#pluck). Now we can do
 
 ```javascript
-userStore.pluck('name').then(function(usernames) {
+userQuery.pluck('name').then(function(usernames) {
   // usernames = ['heiner', 'klaus', 'birgit'];
 });
 ```
@@ -112,7 +112,7 @@ userStore.pluck('name').then(function(usernames) {
 ## Fetch one thing
 
 ```javascript
-userStore.get(id).then(function(user) {
+userQuery.get(id).then(function(user) {
   // POJO containing user data
 });
 ```
@@ -120,7 +120,7 @@ userStore.get(id).then(function(user) {
 ## Create one thing
 
 ```javascript
-userStore.save(data).then(function(user) {
+userQuery.save(data).then(function(user) {
   // POJO containing user data
 });
 ```
@@ -128,7 +128,7 @@ userStore.save(data).then(function(user) {
 ## Update one thing
 
 ```javascript
-userStore.save(id, data).then(function(user) {
+userQuery.save(id, data).then(function(user) {
   // POJO containing user data
 });
 ```
@@ -173,11 +173,11 @@ parameter. The query does not have to request to the same database, so this is
 perfectly possible.
 
 ```javascript
-var memStore = hedy(memAdapter(data));
-var pgStore = hedy(pgAdapter(config));
+var memQuery = hedy(memAdapter(data));
+var pgQuery = hedy(pgAdapter(config));
 
-var userQuery = memStore('user');
-var commentQuery = pgStore('comment');
+var userQuery = memQuery('user');
+var commentQuery = pgQuery('comment');
 
 userQuery.withRelated(hedy.hasMany(commentQuery)).then(log);
 ```
