@@ -7,10 +7,6 @@ var Promise = require('bluebird');
 var merge = require('lodash/object/merge');
 var map = require('lodash/collection/map');
 
-var defaultTableOptions = Immutable.Map({
-  pk: 'id'
-});
-
 var zip = function(key, value) {
   var obj = {};
   obj[key] = value;
@@ -37,7 +33,7 @@ module.exports = function(runQuery, options) {
 
   function evolve(query) {
 
-    function attachconverter(converter) {
+    function attachConverter(converter) {
       return function(fn) {
         return evolve(query.updateIn(['converter'], function(converters) {
           return converters.push(function(result) {
@@ -48,11 +44,19 @@ module.exports = function(runQuery, options) {
     }
 
     var api = {
+      table: function(name) {
+        return evolve(query.set('tableName'), name);
+      },
+
+      pk: function(pk) {
+        return evolve(query.set('pk', pk));
+      },
+
       get: function(id) {
         return evolve(query.merge({
           limit: 1,
           returnArray: false,
-          where: zip(query.getIn(['tableOptions', 'pk']), id)
+          where: zip(query.get('pk'), id)
         }));
       },
 
@@ -103,16 +107,16 @@ module.exports = function(runQuery, options) {
     };
 
     map(options.methods, function(method, name) {
-      api[name] = attachconverter(method);
+      api[name] = attachConverter(method);
     });
 
     return api;
   }
 
-  function store(tableName, query) {
+  function store(tableName) {
     return evolve(iMap({
       tableName: tableName,
-      tableOptions: defaultTableOptions.merge(query),
+      pk: 'id',
       converter: iList(),
       withRelated: iList(),
       returnArray: true

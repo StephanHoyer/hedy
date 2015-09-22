@@ -27,10 +27,8 @@ describe('basics', function() {
   });
 
   it('should allow to create user store', function() {
-    return store('user', {
-      pk: 'hulu'
-    }).then(function(options) {
-      expect(options.tableOptions.pk).to.be('hulu');
+    return store('user').pk('hulu').then(function(options) {
+      expect(options.pk).to.be('hulu');
       expect(options.tableName).to.be('user');
     });
   });
