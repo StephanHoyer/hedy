@@ -1,4 +1,4 @@
-# fnORM - a functional ORM
+# hedy - a functional ORM
 
 Let's face it: Node's ORMs are crap. Mostly at least. But JavaScript is an awesome language. So why. Because we did it wrong. To much class-ish stuff like backbone.
 
@@ -6,9 +6,9 @@ We want to fix this. This is the first idea for the API:
 
 ## Initialisation
 ```javascript
-var fnORM = require('fnorm');
+var hedy = require('hedy');
 
-var store = fnORM(runQueryFn);
+var store = hedy(runQueryFn);
 ```
 
 The `runQueryFn` is the function that is called when a query is fired. It gets
