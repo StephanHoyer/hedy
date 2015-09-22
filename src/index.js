@@ -6,23 +6,26 @@ var iList = Immutable.List;
 var Promise = require('bluebird');
 var merge = require('lodash/object/merge');
 var map = require('lodash/collection/map');
+var map = require('lodash/collection/map');
+var filter = require('lodash/collection/filter');
+var groupBy = require('lodash/collection/groupBy');
+var indexBy = require('lodash/collection/indexBy');
+
+var relations = require('./relations');
 var zip = require('./util').zip;
 
 function isArray(thing) {
   return Object.prototype.toString.call(thing) === '[object Array]';
 }
 
-module.exports = function(adapter, options) {
+module.exports = function(run, options) {
 
   options = merge({
     methods: {
-      filter: function(result, fn) {
-        return result.filter(fn);
-      },
-
-      map: function(result, fn) {
-        return result.map(fn);
-      },
+      map: map,
+      filter: filter,
+      groupBy: groupBy,
+      indexBy: indexBy
     }
   }, options);
 
@@ -95,14 +98,14 @@ module.exports = function(adapter, options) {
       then: function(resolve, reject) {
         return Promise
           .resolve(query.toJS())
-          .then(adapter.runQuery)
+          .then(run)
           .then(resolve, reject);
       },
 
       catch: function(reject) {
         return Promise
           .resolve(query.toJS())
-          .then(adapter.runQuery)
+          .then(run)
           .catch(reject);
       }
     };
@@ -127,3 +130,7 @@ module.exports = function(adapter, options) {
 
   return store;
 };
+
+module.exports.belongsTo = relations.belongsTo;
+module.exports.hasOne = relations.hasOne;
+module.exports.hasMany = relations.hasMany;

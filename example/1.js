@@ -1,12 +1,11 @@
 'use strict';
+
+var hedy = require('../src');
+var memAdapter = require('../src/adapter/mem');
+
 var log = function(thing) {
   console.log(JSON.stringify(thing, true, 2));
 };
-
-var hedy = require('../src');
-var groupBy = require('lodash/collection/groupBy');
-var indexBy = require('lodash/collection/indexBy');
-var memAdapter = require('../src/adapter/mem');
 
 var data = {
   user: [
@@ -28,17 +27,12 @@ var data = {
 
 var adapter = memAdapter(data);
 
-var store = hedy(adapter, {
-  methods: {
-    groupBy: groupBy,
-    indexBy: indexBy
-  }
-});
+var store = hedy(adapter);
 
 var userQuery = store('user');
 var commentQuery = store('comment');
 var postQuery = store('post');
 
-var commentsWithPosts = commentQuery.withRelated(adapter.belongsTo(postQuery));
+var commentsWithPosts = commentQuery.withRelated(hedy.belongsTo(postQuery));
 
-userQuery.withRelated(adapter.hasMany(commentsWithPosts)).then(log);
+userQuery.withRelated(hedy.hasMany(commentsWithPosts)).then(log);
