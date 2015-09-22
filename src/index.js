@@ -61,7 +61,7 @@ module.exports = function(runQuery, options) {
       },
 
       where: function(where) {
-        return evolve(query.set('where', iMap(where)));
+        return evolve(query.set('where', where));
       },
 
       withRelated: function(relation) {
@@ -117,6 +117,7 @@ module.exports = function(runQuery, options) {
     return evolve(iMap({
       tableName: tableName,
       pk: 'id',
+      where: iMap(),
       converter: iList(),
       withRelated: iList(),
       returnArray: true

@@ -1,12 +1,14 @@
 'use strict';
+var log = console.log.bind(console);
 
-var fnORM = require('../src');
+var hedy = require('../src');
 var groupBy = require('lodash/collection/groupBy');
+var indexBy = require('lodash/collection/indexBy');
+var every = require('lodash/collection/every');
+var isArray = require('lodash/lang/isArray');
 var Promise = require('bluebird');
 
-function getId(entity) {
-  return entity.id;
-}
+const get = key => (entity => entity[key]);
 
 var memDB = {
   user: [
@@ -15,46 +17,65 @@ var memDB = {
     { id: 3, name: 'manfred' }
   ],
   comment: [
-    { id: 1, userId: 2, text: 'gorgeous' },
-    { id: 2, userId: 3, text: 'nice' },
-    { id: 4, userId: 1, text: 'splended' },
-    { id: 5, userId: 2, text: 'awesome' },
+    { id: 1, userId: 2, postId: 1, text: 'gorgeous' },
+    { id: 2, userId: 3, postId: 2, text: 'nice' },
+    { id: 4, userId: 1, postId: 2, text: 'splended' },
+    { id: 5, userId: 2, postId: 1, text: 'awesome' }
+  ],
+  post: [
+    { id: 1, userId: 3, text: 'post 1' },
+    { id: 2, userId: 2, text: 'post 1' },
   ]
 };
 
 function runQuery(options) {
-  var list = memDB[options.tableName];
-  return Promise.all(options.withRelated.map(function(relation) {
-    return relation(list);
-  })).then(function() {
-    return Promise.reduce(options.handler, function(list, handler) {
-      return handler(list);
-    }, list);
+  var list = memDB[options.tableName].filter(entity => {
+    return every(options.where, (value, key) => {
+      if (isArray(value)) {
+        return value.indexOf(entity[key]) >= 0;
+      }
+      return entity[key] === value;
+    });
   });
+  return Promise.all(options.withRelated.map(relation => relation(list)))
+    .then(() => Promise.reduce(options.converter, (list, handler) => handler(list), list));
 }
 
-var store = fnORM(runQuery, {
+var store = hedy(runQuery, {
   methods: {
-    groupBy: groupBy
+    groupBy: groupBy,
+    indexBy: indexBy
   }
 });
 
 var userQuery = store('user');
 var commentQuery = store('comment');
+var postQuery = store('post');
 
-function comments(users) {
+function postsOfComments(comments) {
+  return postQuery
+    .where({ id: comments.map(get('postId')) })
+    .indexBy('id')
+    .then(postsByPostId => {
+      comments.map(comment => {
+        comment.post = postsByPostId[comment.postId];
+        return comment;
+      });
+    });
+}
+
+function commentsOfUsers(users) {
   return commentQuery
-    .where({ userId: users.map(getId) })
+    .where({ userId: users.map(get('id')) })
+    .withRelated(postsOfComments)
     .groupBy('userId')
-    .then(function(commentsByUserId) {
-      return users.map(function(user) {
+    .then(commentsByUserId => {
+      users.map(user => {
         user.comments = commentsByUserId[user.id];
         return user;
       });
     });
 }
 
-userQuery.withRelated(comments).then(function(user) {
-  console.log(user);
-});
+userQuery.withRelated(commentsOfUsers).then(log);
 
