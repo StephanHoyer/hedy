@@ -6,18 +6,13 @@ var iList = Immutable.List;
 var Promise = require('bluebird');
 var merge = require('lodash/object/merge');
 var map = require('lodash/collection/map');
-
-var zip = function(key, value) {
-  var obj = {};
-  obj[key] = value;
-  return obj;
-};
+var zip = require('./util').zip;
 
 function isArray(thing) {
   return Object.prototype.toString.call(thing) === '[object Array]';
 }
 
-module.exports = function(runQuery, options) {
+module.exports = function(adapter, options) {
 
   options = merge({
     methods: {
@@ -45,11 +40,17 @@ module.exports = function(runQuery, options) {
 
     var api = {
       table: function(name) {
-        return evolve(query.set('tableName'), name);
+        if (name) {
+          return evolve(query.set('tableName'), name);
+        }
+        return query.get('tableName');
       },
 
       pk: function(pk) {
-        return evolve(query.set('pk', pk));
+        if (pk) {
+          return evolve(query.set('pk', pk));
+        }
+        return query.get('pk');
       },
 
       get: function(id) {
@@ -94,14 +95,14 @@ module.exports = function(runQuery, options) {
       then: function(resolve, reject) {
         return Promise
           .resolve(query.toJS())
-          .then(runQuery)
+          .then(adapter.runQuery)
           .then(resolve, reject);
       },
 
       catch: function(reject) {
         return Promise
           .resolve(query.toJS())
-          .then(runQuery)
+          .then(adapter.runQuery)
           .catch(reject);
       }
     };
