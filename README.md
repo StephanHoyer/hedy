@@ -1,28 +1,34 @@
-# fnORM - a functional ORM
+# hedy - a functional ORM
 
-Let's face it: Node's ORMs are crap. Mostly at least. But JavaScript is an awesome language. So why. Because we did it wrong. To much class-ish stuff like backbone.
+Let's face it: Node's ORMs are crap. Mostly at least. But JavaScript is an
+awesome language. So why? Because we did it wrong. To much class-ish stuff like
+backbone. And prototypal inheritance, which is bad.
 
-We want to fix this. This is the first idea for the API:
+We want to fix this!
 
 ## Initialisation
-```javascript
-var fnORM = require('fnorm');
 
-var store = fnORM(runQueryFn);
+```javascript
+var hedy = require('hedy');
+var mem = require('hedy/adapter/mem');
+
+var store = hedy(adapter);
 ```
 
-The `runQueryFn` is the function that is called when a query is fired. It gets
-the query options object as parameter. This is a database-specific function. We
-will create adapters for various databases that contain the specic operations to
-run the given query. See the example in the example folder how we plan to
-implement this.
+The `adapter` is a function that is called when a query is fired. It gets
+the query options-object as parameter. This is a database-specific function. In
+this case we user the build in memory adapter. In the future we want to create
+adapter for various databases. The goal is that it's really easy to create one for you
+specific datastore.
+
+See the existing adapters how this works.
 
 ## Creating Models/Collections/Whatever-you-call-them
 
-... , we call it query.
+..., we just call it `query`.
 
 ```javascript
-var query = store('user') // 'user' is the tablename
+var userQuery = store('user') // 'user' is the tablename
 ```
 
 The `query` is a monad-ish structure. You can call methods on it and it returns
@@ -33,7 +39,19 @@ Unter the hood this is done using
 ## Fetch array of things
 
 ```javascript
-userStore.where(where).map(fn).filter(fn).then(function(users) {
+userStore.where(where).then(function(users) {
+  // Array of POJOs containing user data
+});
+```
+
+The where can be omitted, in this case all items where fetched. The query will
+only run, if you call `then` on it. This allows lazily fetch things.
+
+There are also some utility functions that might be usefull. They can be called
+on the query without actually fetching it.
+
+```javascript
+userStore.where(where).map(fn1).filter(fn2).then(function(users) {
   // Array of POJOs containing user data
 });
 ```
@@ -41,28 +59,53 @@ userStore.where(where).map(fn).filter(fn).then(function(users) {
 The map and filter will be applied onto the fetched collection in the order as
 they are applied to the query. They may return a promise.
 
-It's easy to add your own method there:
+Because all that is lazy you might do the following:
 
 ```javascript
-var groupBy = require('lodash/collection/groupBy');
+var usersWithLongNames = userStore.filter(function(user) {
+  return user.name.length > 10;
+})
 
-var store = fnORM(runQueryFn, {
+var femaleUsersWithLongNames = usersWithLongNames.filter(function(user) {
+  return user.gender === 'female'
+})
+
+var kidsWithLongNames = usersWithLongNames.filter(function(user) {
+  return user.age < 10;
+})
+
+var namesOfKidsWithLongNames = kidsWithLongNames.map(function(user) {
+  return user.name;
+});
+
+// if you now need the names of the kids:
+namesOfKidsWithLongNames.then(function(names) {
+  // there you have it.
+});
+```
+
+Sure, in some of those cases the database might do the heavy lifting, but there are
+cases where code can express much more then a database query. Also code reuse
+and composition can lead to great improvements here.
+
+Currently there are only a few methods build in: `map`, `reduce`, `groupBy`,
+`indexBy`. It's easy to add your own method there. In the upper example lodashs
+`pluck` might be a good choice to get the user name:
+
+```javascript
+var store = hedy(adapter, {
   methods: {
-    groupBy: groupBy
+    pluck: require('lodash/collection/pluck');
   }
 });
 ```
 
-In this case we add the `groupBy`-function of
-[lodash](https://lodash.com/docs#groupBy). Now we can do
+In this case we add the `pluck`-function of
+[lodash](https://lodash.com/docs#pluck). Now we can do
 
 ```javascript
-userStore.groupBy('id').then(function(usersById) {
-  // usersById = {
-  //   1: [ { id: 1, name: 'heiner' } ],
-  //   2: [ { id: 2, name: 'klaus' } ],
-  //   3: [ { id: 3, name: 'birgit' } ],
-  // }
+userStore.pluck('name').then(function(usernames) {
+  // usernames = ['heiner', 'klaus', 'birgit'];
 });
 ```
 
@@ -92,29 +135,54 @@ userStore.save(id, data).then(function(user) {
 
 ## Relations
 
-Fetching relations is pretty db-dependent. We try to abstract this out to
-adapters.
-
-An adapter will be a `runQueryFn` together with the specific way to fetch the
-related objects. This way we are able to even fetch relations beween different
-databases or even database-types!
-
-See the first example in the example folder how we plan to implement this.
+Relation are a key part of ORMs. In most ORMs relations can only be in the same
+database. *Hedy* as a different approach on this. Relations are defined as
+querys. Let's look at an example:
 
 ```javascript
-postStore.get(123).withRelated(user, comments).then(function(post) {
-  // post = {
-  //   titel: 'hurray'
-  //   user: {
-  //     name: 'Mister T'
-  //   },
-  //   comments: [
-  //     { text: 'awesome' },
-  //     { text: '+1' }
-  //   ]
-  // };
-});
+var data = {
+  user: [
+    { id: 1, name: 'heiner' },
+    { id: 2, name: 'klaus' },
+    { id: 3, name: 'manfred' }
+  ],
+  comment: [
+    { id: 1, userId: 2, text: 'gorgeous' },
+    { id: 2, userId: 3, text: 'nice' },
+    { id: 4, userId: 1, text: 'splended' },
+    { id: 5, userId: 2, text: 'awesome' }
+  ]
+};
+var adapter = memAdapter(data);
+var store = hedy(adapter);
+
+var userQuery = store('user');
+var commentQuery = store('comment');
 ```
+
+Here we have a memory db containing users and their comments.
+
+To fetch the users with the comments we do:
+
+```javascript
+userQuery.withRelated(hedy.hasMany(commentQuery)).then(log);
+```
+
+As you see, we use a helper to declare a to-many-relation and give a query as
+parameter. The query does not have to request to the same database, so this is
+perfectly possible.
+
+```javascript
+var memStore = hedy(memAdapter(data));
+var pgStore = hedy(pgAdapter(config));
+
+var userQuery = memStore('user');
+var commentQuery = pgStore('comment');
+
+userQuery.withRelated(hedy.hasMany(commentQuery)).then(log);
+```
+
+For a more advanced example see the examples in the examples folder.
 
 ## Current state
 
