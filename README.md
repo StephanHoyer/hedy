@@ -1,6 +1,7 @@
 # hedy - a functional ORM
 
 [![Join the chat at https://gitter.im/StephanHoyer/hedy](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/StephanHoyer/hedy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Build Status](https://travis-ci.org/StephanHoyer/hedy.svg)](https://travis-ci.org/StephanHoyer/hedy)
 
 Let's face it: Node's ORMs are crap. Mostly at least. But JavaScript is an
 awesome language. So why? Because we did it wrong. To much class-ish stuff like
