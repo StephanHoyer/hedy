@@ -1,5 +1,6 @@
 'use strict';
 var every = require('lodash/collection/every');
+var clone = require('lodash/lang/clone');
 var isArray = require('lodash/lang/isArray');
 var Promise = require('bluebird');
 
@@ -12,8 +13,21 @@ module.exports = function(data) {
         }
         return entity[key] === value;
       });
-    });
-    return Promise.all(options.withRelated.map(relation => relation(list, options)))
-      .then(() => Promise.reduce(options.converter, (list, handler) => handler(list), list));
+    }).map(clone);
+    if (!options.returnArray) {
+      list = [list[0]];
+    }
+
+    var listPromise = Promise.all(options.withRelated.map(relation => relation(list, options)));
+
+
+    if (!options.returnArray) {
+      return listPromise.then(() => list[0]);
+    }
+
+    return listPromise
+      .then(() => Promise.reduce(options.converter, function(list, handler) {
+        return handler(list);
+      }, list));
   };
 };

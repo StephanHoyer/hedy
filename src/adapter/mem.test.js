@@ -53,4 +53,11 @@ describe('mem-adapter', () => {
       expect(users[0].comments[0].text).to.be('splended');
     });
   });
+
+  it('should fetch one by id', () => {
+    return userQuery.get(3).then((user) => {
+      expect(user).to.eql(data.user[2]);
+    });
+  });
+
 });
