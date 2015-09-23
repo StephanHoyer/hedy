@@ -195,3 +195,7 @@ adapter since this is the DB we're using in out project.
 Hope you like it.
 
 If you have any ideas, feel free to create a PR/Issue.
+
+## links
+
+* Pretty similar attempt to hedy by the bookshelf maintainer: https://github.com/rhys-vdw/data-mapper
