@@ -66,6 +66,21 @@ describe('mem-adapter', () => {
     });
   });
 
+  describe('create', () => {
+    it('should create item with data from query', () => {
+      return userQuery.post({
+        id: 4,
+        name: 'frieda'
+      }).then(function(savedFrieda) {
+        expect(savedFrieda.name).to.be('frieda');
+        return userQuery.get(4);
+      }).then(function(friedaFromDb) {
+        expect(friedaFromDb.name).to.be('frieda');
+        expect(friedaFromDb.age).to.be(undefined);
+      });
+    });
+  });
+
   describe('update', () => {
     it('should replace data from query', () => {
       return userQuery.put(2, {

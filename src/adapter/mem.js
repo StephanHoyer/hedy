@@ -33,6 +33,16 @@ module.exports = function(data) {
       }, list));
   }
 
+  function post(options) {
+    var list = data[options.tableName];
+    var item = list.find(function(item) {
+      return item.id === options.id;
+    });
+    remove(list, item);
+    list.push(options.data);
+    return options.data;
+  }
+
   function put(options) {
     var list = data[options.tableName];
     var item = list.find(function(item) {
@@ -55,7 +65,8 @@ module.exports = function(data) {
   return {
     get: get,
     put: put,
-    patch: patch
+    patch: patch,
+    post: post
   };
 
 };

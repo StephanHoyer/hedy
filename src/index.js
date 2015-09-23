@@ -97,18 +97,10 @@ module.exports = function(adapter, options) {
         }));
       },
 
-      save: function(id, data) {
-        if (data) {
-          return evolve(query.merge({
-            type: 'update',
-            updateId: id,
-            saveData: data,
-            returnArray: false
-          }));
-        }
+      post: function(data) {
         return evolve(query.merge({
-          type: 'create',
-          saveData: id
+          type: 'post',
+          data: data
         }));
       },
 
