@@ -81,12 +81,29 @@ module.exports = function(adapter, options) {
         return evolve(query.set('count', true));
       },
 
+      put: function(id, data) {
+        return evolve(query.merge({
+          type: 'put',
+          id: id,
+          data: data
+        }));
+      },
+
+      patch: function(id, data) {
+        return evolve(query.merge({
+          type: 'patch',
+          id: id,
+          data: data
+        }));
+      },
+
       save: function(id, data) {
         if (data) {
           return evolve(query.merge({
             type: 'update',
             updateId: id,
-            saveData: data
+            saveData: data,
+            returnArray: false
           }));
         }
         return evolve(query.merge({
@@ -98,7 +115,7 @@ module.exports = function(adapter, options) {
       then: function(resolve, reject) {
         return Promise
           .resolve(query.toJS())
-          .then(adapter.get)
+          .then(adapter[query.get('type')])
           .then(resolve, reject);
       },
 
@@ -119,6 +136,7 @@ module.exports = function(adapter, options) {
 
   function store(tableName) {
     return evolve(iMap({
+      type: 'get',
       tableName: tableName,
       pk: 'id',
       where: iMap(),

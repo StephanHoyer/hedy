@@ -2,6 +2,7 @@
 var every = require('lodash/collection/every');
 var clone = require('lodash/lang/clone');
 var isArray = require('lodash/lang/isArray');
+var remove = require('lodash/array/remove');
 var Promise = require('bluebird');
 
 module.exports = function(data) {
@@ -32,8 +33,29 @@ module.exports = function(data) {
       }, list));
   }
 
+  function put(options) {
+    var list = data[options.tableName];
+    var item = list.find(function(item) {
+      return item.id === options.id;
+    });
+    remove(list, item);
+    list.push(options.data);
+    return options.data;
+  }
+
+  function patch(options) {
+    var list = data[options.tableName];
+    var item = list.find(function(item) {
+      return item.id === options.id;
+    });
+    Object.assign(item, options.data);
+    return item;
+  }
+
   return {
-    get: get
+    get: get,
+    put: put,
+    patch: patch
   };
 
 };
