@@ -198,4 +198,4 @@ If you have any ideas, feel free to create a PR/Issue.
 
 ## links
 
-* Pretty similar attempt to hedy by the bookshelf maintainer: https://github.com/rhys-vdw/data-mapper
+* Pretty similar attempt to *hedy* by the bookshelf maintainer: https://github.com/rhys-vdw/data-mapper

@@ -5,7 +5,8 @@ var isArray = require('lodash/lang/isArray');
 var Promise = require('bluebird');
 
 module.exports = function(data) {
-  return function runQuery(options) {
+
+  function get(options) {
     var list = data[options.tableName].filter(entity => {
       return every(options.where, (value, key) => {
         if (isArray(value)) {
@@ -29,5 +30,10 @@ module.exports = function(data) {
       .then(() => Promise.reduce(options.converter, function(list, handler) {
         return handler(list);
       }, list));
+  }
+
+  return {
+    get: get
   };
+
 };

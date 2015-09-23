@@ -1,8 +1,7 @@
 'use strict';
 
 var expect = require('expect.js');
-var fnORM = require('./index');
-var Promise = require('bluebird');
+var hedy = require('./index');
 
 function noop() {}
 
@@ -23,7 +22,9 @@ describe('basics', function() {
 
   beforeEach(function() {
     // for testing we simply forward the query options as result of the query
-    store = fnORM(identity);
+    store = hedy({
+      get: identity
+    });
   });
 
   it('should allow to create user store', function() {
@@ -98,7 +99,7 @@ describe('basics', function() {
   });
 
   it('should be possible to add own converter functions', function() {
-    store = fnORM(identity, {
+    store = hedy({ get: identity }, {
       methods: {
         fooify: function(result, arg) {
           result.foo = arg;
@@ -115,9 +116,11 @@ describe('basics', function() {
   });
 
   it('should run query when calling `then` on query object', function() {
-    store = fnORM(function run(options) {
-      expect(options.tableName).to.be('user');
-      return 'user';
+    store = hedy({
+      get: function (options) {
+        expect(options.tableName).to.be('user');
+        return 'user';
+      }
     });
     return store('user').then(function(user) {
       expect(user).to.be('user');
@@ -125,8 +128,10 @@ describe('basics', function() {
   });
 
   it('should allow to catch errors thrown in runner calling `then` on query object', function() {
-    store = fnORM(function run() {
-      throw new Error('eeck');
+    store = hedy({
+      get: function run() {
+        throw new Error('eeck');
+      }
     });
     return store('user').then(noop, function(error) {
       expect(error.message).to.be('eeck');
@@ -134,8 +139,10 @@ describe('basics', function() {
   });
 
   it('should allow to catch errors thrown in runner calling `then` on query object', function() {
-    store = fnORM(function run() {
-      throw new Error('eeck');
+    store = hedy({
+      get: function run() {
+        throw new Error('eeck');
+      }
     });
     return store('user').catch(function(error) {
       expect(error.message).to.be('eeck');
@@ -148,7 +155,7 @@ describe('relations', function() {
 
   beforeEach(function() {
     // for testing we simply forward the query options as result of the query
-    store = fnORM(identity);
+    store = hedy({ get: identity });
   });
 
   it('allow to add relations to query', function() {

@@ -18,7 +18,7 @@ function isArray(thing) {
   return Object.prototype.toString.call(thing) === '[object Array]';
 }
 
-module.exports = function(run, options) {
+module.exports = function(adapter, options) {
 
   options = merge({
     methods: {
@@ -98,14 +98,14 @@ module.exports = function(run, options) {
       then: function(resolve, reject) {
         return Promise
           .resolve(query.toJS())
-          .then(run)
+          .then(adapter.get)
           .then(resolve, reject);
       },
 
       catch: function(reject) {
         return Promise
           .resolve(query.toJS())
-          .then(run)
+          .then(adapter.get)
           .catch(reject);
       }
     };
