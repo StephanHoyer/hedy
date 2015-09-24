@@ -1,7 +1,8 @@
 'use strict';
 
-var expect = require('expect.js');
-var hedy = require('./index');
+const expect = require('expect.js');
+const hedy = require('./index');
+const memAdapter = require('./adapter/mem');
 
 function noop() {}
 
@@ -134,29 +135,46 @@ describe('basics', function() {
 });
 
 describe('relations', function() {
-  var store;
+  var store, data, commentQuery, userQuery;
 
   beforeEach(function() {
-    // for testing we simply forward the query options as result of the query
-    store = hedy({ get: identity });
+    data = {
+      user: [
+        { id: 1, name: 'heiner', age: 20 },
+        { id: 2, name: 'klaus', age: 27 },
+        { id: 3, name: 'manfred', age: 30 }
+      ],
+      friend: [
+        { user1Id: 1, user2Id: 2 },
+        { user1Id: 2, user2Id: 3 }
+      ],
+      comment: [
+        { id: 1, userId: 2, text: 'gorgeous' },
+        { id: 2, userId: 3, text: 'nice' },
+        { id: 4, userId: 1, text: 'splended' },
+        { id: 5, userId: 2, text: 'awesome' }
+      ],
+    };
+    store = hedy(memAdapter(data));
+    commentQuery = store('comment');
+    userQuery = store('user');
   });
 
-  it('allow to add relations to query', function() {
-    return store('user').withRelated('friends').then(function(options) {
-      expect(options.withRelated[0]).to.be('friends');
+  it('allow to add hasMany relation to query', function() {
+    return userQuery.withRelated(hedy.hasMany(commentQuery)).then(function(user) {
+      expect(user[0].comments).to.eql([data.comment[2]]);
     });
   });
 
-  it('allow to add multiple relations at once to query', function() {
-    return store('user').withRelated(['friends', 'comments']).then(function(options) {
-      expect(options.withRelated[0]).to.be('friends');
-      expect(options.withRelated[1]).to.be('comments');
+  it('allow to add hasOne relation to query', function() {
+    return userQuery.withRelated(hedy.hasOne(commentQuery)).then(function(user) {
+      expect(user[0].comment).to.eql(data.comment[2]);
     });
   });
-  it('allow to add multiple relations sequentially to query', function() {
-    return store('user').withRelated('friends').withRelated('comments').then(function(options) {
-      expect(options.withRelated[0]).to.be('friends');
-      expect(options.withRelated[1]).to.be('comments');
+
+  it('allow to add belongsTo relation to query', function() {
+    return commentQuery.withRelated(hedy.belongsTo(userQuery)).then(function(comments) {
+      expect(comments[0].user).to.eql(data.user[1]);
     });
   });
 });

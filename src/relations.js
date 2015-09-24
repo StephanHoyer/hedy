@@ -53,7 +53,7 @@ function hasOne(query, options) {
     }, options);
     return query
       .where(zip(options.fk, list.map(get(options.pk))))
-      .groupBy(options.fk)
+      .indexBy(options.fk)
       .then(relatedItemsByFK => {
         list.map(item => {
           item[options.relationKey] = relatedItemsByFK[item.id];
