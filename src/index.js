@@ -148,6 +148,4 @@ module.exports = function(adapter, options) {
   return store;
 };
 
-module.exports.belongsTo = relations.belongsTo;
-module.exports.hasOne = relations.hasOne;
-module.exports.hasMany = relations.hasMany;
+Object.assign(module.exports, relations);

@@ -135,7 +135,7 @@ describe('basics', () => {
 });
 
 describe('relations', () => {
-  var store, data, commentQuery, userQuery;
+  var store, data, commentQuery, userQuery, friendQuery;
 
   beforeEach(() => {
     data = {
@@ -158,6 +158,7 @@ describe('relations', () => {
     store = hedy(memAdapter(data));
     commentQuery = store('comment');
     userQuery = store('user');
+    friendQuery = store('friend');
   });
 
   it('allow to add hasMany relation to query', () => {
@@ -175,6 +176,16 @@ describe('relations', () => {
   it('allow to add belongsTo relation to query', () => {
     return commentQuery.withRelated(hedy.belongsTo(userQuery)).then(function(comments) {
       expect(comments[0].user).to.eql(data.user[1]);
+    });
+  });
+
+  it('allow to add manyToMany relation to query', () => {
+    var friends = hedy.hasManyThrough(userQuery, friendQuery, {
+      fromFk: 'user1Id',
+      toFk: 'user2Id'
+    });
+    return userQuery.withRelated(friends).then(function(user) {
+      expect(user[0].friends[0].name).to.eql(data.user[1].name);
     });
   });
 

@@ -27,7 +27,15 @@ function belongsTo(query, options) {
       .indexBy(options.pk)
       .then(relatedItemsByPK => {
         list.map(item => {
-          item[options.relationKey] = relatedItemsByPK[item[options.fk]];
+          var relatedItem = relatedItemsByPK[item[options.fk]];
+
+          if (options.relationKey === false) {
+            // colapse mode: Properties of related items are mixed into item
+            // This is e. G. used by the hasManyThrough relation
+            Object.assign(item, relatedItem);
+          } else {
+            item[options.relationKey] = relatedItem;
+          }
           return item;
         });
       });
@@ -51,6 +59,19 @@ function hasMany(query, options) {
           return item;
         });
       });
+  }, options);
+}
+
+function hasManyThrough(query, throughQuery, options) {
+  options = options || {};
+  var rightQuery = belongsTo(query, {
+    fk: options.toFk,
+    pk: options.toPk,
+    relationKey: false
+  });
+  return hasMany(throughQuery.withRelated(rightQuery), {
+    fk: options.fromFk,
+    pk: options.fromPk
   });
 }
 
@@ -71,11 +92,12 @@ function hasOne(query, options) {
           return item;
         });
       });
-  });
+  }, options);
 }
 
 module.exports = {
-  belongsTo,
-  hasMany,
-  hasOne
+  belongsTo: belongsTo,
+  hasMany: hasMany,
+  hasManyThrough: hasManyThrough,
+  hasOne: hasOne
 };
