@@ -104,6 +104,13 @@ module.exports = function(adapter, options) {
         }));
       },
 
+      del: function(id) {
+        return evolve(query.merge({
+          type: 'del',
+          id: id
+        }));
+      },
+
       then: function(resolve, reject) {
         return Promise
           .resolve(query.toJS())

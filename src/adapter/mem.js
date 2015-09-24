@@ -17,6 +17,9 @@ module.exports = function(data) {
       });
     }).map(clone);
     if (!options.returnArray) {
+      if (!list.length) {
+        throw new Error('No item found');
+      }
       list = [list[0]];
     }
 

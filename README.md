@@ -123,7 +123,7 @@ userQuery.get(id).then(function(user) {
 ## Create one thing
 
 ```javascript
-userQuery.save(data).then(function(user) {
+userQuery.post(data).then(function(user) {
   // POJO containing user data
 });
 ```
@@ -131,8 +131,23 @@ userQuery.save(data).then(function(user) {
 ## Update one thing
 
 ```javascript
-userQuery.save(id, data).then(function(user) {
+userQuery.put(id, data).then(function(user) {
   // POJO containing user data
+});
+```
+
+You can also patch stuff:
+
+```javascript
+userQuery.patch(id, data).then(function(user) {
+  // POJO containing user data
+});
+```
+
+## delete one thing
+
+```javascript
+userQuery.del(id).then(function() {
 });
 ```
 

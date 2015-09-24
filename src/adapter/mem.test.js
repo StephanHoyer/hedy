@@ -67,7 +67,7 @@ describe('mem-adapter', () => {
   });
 
   describe('create', () => {
-    it('should create item with data from query', () => {
+    it('should create item with data from query', (done) => {
       return userQuery.post({
         id: 4,
         name: 'frieda'
@@ -77,6 +77,22 @@ describe('mem-adapter', () => {
       }).then(function(friedaFromDb) {
         expect(friedaFromDb.name).to.be('frieda');
         expect(friedaFromDb.age).to.be(undefined);
+        done();
+      });
+    });
+  });
+
+  describe('delete', () => {
+    it('should delete item by id', (done) => {
+      return userQuery.del(4).then(function() {
+        return userQuery.get(4);
+      }).then(function(deletedUser) {
+        if (deletedUser) {
+          throw new Error('Deleted user should not exist anymore');
+        }
+      }).catch(function(error) {
+        expect(error.message).to.be('No item found');
+        done();
       });
     });
   });
