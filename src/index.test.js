@@ -177,4 +177,10 @@ describe('relations', function() {
       expect(comments[0].user).to.eql(data.user[1]);
     });
   });
+
+  it('allow set aliases for relation', function() {
+    return commentQuery.withRelated(hedy.belongsTo(userQuery).as('author')).then(function(comments) {
+      expect(comments[0].author).to.eql(data.user[1]);
+    });
+  });
 });

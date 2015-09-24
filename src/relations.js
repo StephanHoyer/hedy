@@ -6,13 +6,22 @@ var pluralize = require('pluralize');
 
 const get = key => (entity => entity[key]);
 
+function wrapApi(fn, options) {
+  fn.as = function(name) {
+    options.relationKey = name;
+    return fn;
+  };
+  return fn;
+}
+
 function belongsTo(query, options) {
-  options = merge({
-    relationKey: query.table(),
-    fk: query.table() + 'Id',
-    pk: query.pk()
-  }, options);
-  return function(list) {
+  options = options || {};
+  return wrapApi(function(list) {
+    options = merge({
+      relationKey: query.table(),
+      fk: query.table() + 'Id',
+      pk: query.pk()
+    }, options);
     return query
       .where(zip(options.pk, list.map(get(options.fk))))
       .indexBy(options.pk)
@@ -22,11 +31,12 @@ function belongsTo(query, options) {
           return item;
         });
       });
-  };
+  }, options);
 }
 
 function hasMany(query, options) {
-  return function(list, parentQuery) {
+  options = options || {};
+  return wrapApi(function(list, parentQuery) {
     options = merge({
       relationKey: pluralize(query.table()),
       fk: parentQuery.tableName + 'Id',
@@ -41,11 +51,12 @@ function hasMany(query, options) {
           return item;
         });
       });
-  };
+  });
 }
 
 function hasOne(query, options) {
-  return function(list, parentQuery) {
+  options = options || {};
+  return wrapApi(function(list, parentQuery) {
     options = merge({
       relationKey: query.table(),
       fk: parentQuery.tableName + 'Id',
@@ -60,7 +71,7 @@ function hasOne(query, options) {
           return item;
         });
       });
-  };
+  });
 }
 
 module.exports = {
