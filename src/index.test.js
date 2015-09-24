@@ -18,30 +18,30 @@ function isFoo(item) {
   return item.isFoo;
 }
 
-describe('basics', function() {
+describe('basics', () => {
   var store;
 
-  beforeEach(function() {
+  beforeEach(() => {
     // for testing we simply forward the query options as result of the query
     store = hedy({
       get: identity
     });
   });
 
-  it('should allow to create user store', function() {
+  it('should allow to create user store', () => {
     return store('user').pk('hulu').then(function(options) {
       expect(options.pk).to.be('hulu');
       expect(options.tableName).to.be('user');
     });
   });
 
-  it('should create a query to fetch array of items from store', function() {
+  it('should create a query to fetch array of items from store', () => {
     return store('user').then(function(options) {
       expect(options.returnArray).to.be(true);
     });
   });
 
-  it('should create a query to fetch one item from store', function() {
+  it('should create a query to fetch one item from store', () => {
     return store('user').get(123).then(function(options) {
       expect(options.limit).to.be(1);
       expect(options.returnArray).to.be(false);
@@ -49,7 +49,7 @@ describe('basics', function() {
     });
   });
 
-  it('should create a query with where to fetch array of items from store', function() {
+  it('should create a query with where to fetch array of items from store', () => {
     return store('user').where({
       huhu: 'haha'
     }).then(function(options) {
@@ -58,19 +58,19 @@ describe('basics', function() {
     });
   });
 
-  it('should create a count request', function() {
+  it('should create a count request', () => {
     return store('user').count().then(function(options) {
       expect(options.count).to.be(true);
     });
   });
 
-  it('should create a query with map converter function', function() {
+  it('should create a query with map converter function', () => {
     return store('user').map(getId).then(function(options) {
       expect(options.converter).to.have.length(1);
     });
   });
 
-  it('should create a query with multiple converter functions', function() {
+  it('should create a query with multiple converter functions', () => {
     return store('user').map(getId).filter(isFoo).then(function(options) {
       expect(options.converter).to.have.length(2);
 
@@ -82,7 +82,7 @@ describe('basics', function() {
     });
   });
 
-  it('should be possible to add own converter functions', function() {
+  it('should be possible to add own converter functions', () => {
     store = hedy({ get: identity }, {
       methods: {
         fooify: function(result, arg) {
@@ -99,7 +99,7 @@ describe('basics', function() {
     });
   });
 
-  it('should run query when calling `then` on query object', function() {
+  it('should run query when calling `then` on query object', () => {
     store = hedy({
       get: function (options) {
         expect(options.tableName).to.be('user');
@@ -111,7 +111,7 @@ describe('basics', function() {
     });
   });
 
-  it('should allow to catch errors thrown in runner calling `then` on query object', function() {
+  it('should allow to catch errors thrown in runner calling `then` on query object', () => {
     store = hedy({
       get: function run() {
         throw new Error('eeck');
@@ -122,7 +122,7 @@ describe('basics', function() {
     });
   });
 
-  it('should allow to catch errors thrown in runner calling `then` on query object', function() {
+  it('should allow to catch errors thrown in runner calling `then` on query object', () => {
     store = hedy({
       get: function run() {
         throw new Error('eeck');
@@ -134,10 +134,10 @@ describe('basics', function() {
   });
 });
 
-describe('relations', function() {
+describe('relations', () => {
   var store, data, commentQuery, userQuery;
 
-  beforeEach(function() {
+  beforeEach(() => {
     data = {
       user: [
         { id: 1, name: 'heiner', age: 20 },
@@ -160,25 +160,25 @@ describe('relations', function() {
     userQuery = store('user');
   });
 
-  it('allow to add hasMany relation to query', function() {
+  it('allow to add hasMany relation to query', () => {
     return userQuery.withRelated(hedy.hasMany(commentQuery)).then(function(user) {
       expect(user[0].comments).to.eql([data.comment[2]]);
     });
   });
 
-  it('allow to add hasOne relation to query', function() {
+  it('allow to add hasOne relation to query', () => {
     return userQuery.withRelated(hedy.hasOne(commentQuery)).then(function(user) {
       expect(user[0].comment).to.eql(data.comment[2]);
     });
   });
 
-  it('allow to add belongsTo relation to query', function() {
+  it('allow to add belongsTo relation to query', () => {
     return commentQuery.withRelated(hedy.belongsTo(userQuery)).then(function(comments) {
       expect(comments[0].user).to.eql(data.user[1]);
     });
   });
 
-  it('allow set aliases for relation', function() {
+  it('allow set aliases for relation', () => {
     return commentQuery.withRelated(hedy.belongsTo(userQuery).as('author')).then(function(comments) {
       expect(comments[0].author).to.eql(data.user[1]);
     });
