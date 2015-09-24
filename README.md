@@ -153,7 +153,7 @@ userQuery.del(id).then(function() {
 
 ## Relations
 
-Relation are a key part of ORMs. In most ORMs relations can only be in the same
+Relations are a key part of ORMs. In most ORMs relations can only be in the same
 database. *Hedy* as a different approach on this. Relations are defined as
 querys. Let's look at an example:
 
@@ -206,7 +206,7 @@ For a more advanced example see the examples in the examples folder.
 
 This is pretty much WIP. The basics are done. Now it's time to write the
 adapters. First one will be a memory-adapter. Then we first add a postgres
-adapter since this is the DB we're using in out project.
+adapter since this is the DB we're using in our project.
 
 Hope you like it.
 
