@@ -4,7 +4,7 @@
   "description": "functional ORM",
   "main": "index.js",
   "scripts": {
-    "test": "mocha src/**/*.test.js"
+    "test": "node_modules/.bin/mocha --timeout 3000 -b `find ./src -type f -name '*.test.js'`"
   },
   "repository": {
     "type": "git",
