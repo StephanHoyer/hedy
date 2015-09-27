@@ -55,7 +55,7 @@ function hasMany(query, options) {
       .groupBy(options.fk)
       .then(relatedItemsByFK => {
         list.map(item => {
-          item[options.relationKey] = relatedItemsByFK[item.id];
+          item[options.relationKey] = relatedItemsByFK[item.id] || [];
           return item;
         });
       });
@@ -63,7 +63,10 @@ function hasMany(query, options) {
 }
 
 function hasManyThrough(query, throughQuery, options) {
-  options = options || {};
+  options = merge({
+    fromPk: 'id',
+    toPk: 'id'
+  }, options);
   var rightQuery = belongsTo(query, {
     fk: options.toFk,
     pk: options.toPk,
@@ -75,9 +78,12 @@ function hasManyThrough(query, throughQuery, options) {
   });
   relation.link = function(itemA, itemB) {
     var link = {};
-    link[options.fromFk] = itemA[options.fromPk || 'id'];
-    link[options.toFk] = itemB[options.toPk || 'id'];
+    link[options.fromFk] = itemA[options.fromPk];
+    link[options.toFk] = itemB[options.toPk];
     return throughQuery.post(link);
+  };
+  relation.unlink = function(itemA, itemB) {
+    return throughQuery.del([itemA[options.fromPk], itemB[options.toPk]]);
   };
   return relation;
 }

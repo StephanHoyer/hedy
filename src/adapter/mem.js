@@ -82,11 +82,25 @@ module.exports = function(data) {
     return item;
   }
 
+  function del(options) {
+    var list = data[options.tableName];
+    var pk = isArray(options.id) ? options.id.join(PK_DELIMITER) : options.id;
+    var item = list.find(function(item) {
+      return getPk(options.pk, item) === pk;
+    });
+    if (!item) {
+      throw Error('Item with key ' + pk + ' does not exist');
+    }
+    remove(list, item);
+  }
+
+
   return {
     get: get,
     put: put,
     patch: patch,
-    post: post
+    post: post,
+    del: del
   };
 
 };

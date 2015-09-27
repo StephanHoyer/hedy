@@ -84,8 +84,8 @@ describe('mem-adapter', () => {
 
   describe('delete', () => {
     it('should delete item by id', (done) => {
-      return userQuery.del(4).then(function() {
-        return userQuery.get(4);
+      return userQuery.del(3).then(function() {
+        return userQuery.get(3);
       }).then(function(deletedUser) {
         if (deletedUser) {
           throw new Error('Deleted user should not exist anymore');

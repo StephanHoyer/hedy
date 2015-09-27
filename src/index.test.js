@@ -214,5 +214,15 @@ describe('relations', () => {
         expect(fetchedUser.friends[1].id).to.eql(user3.id);
       });
     });
+
+    it('should allow to unlink two objects', () => {
+      var user1 = { id: 1 };
+      var user2 = { id: 2 };
+      friends.unlink(user1, user2).then(function() {
+        return userQuery.get(user1.id).withRelated(friends);
+      }).then(fetchedUser => {
+        expect(fetchedUser.friends).to.have.length(0);
+      });
+    });
   });
 });
