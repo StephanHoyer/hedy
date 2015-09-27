@@ -135,7 +135,7 @@ describe('basics', () => {
 });
 
 describe('relations', () => {
-  var store, data, commentQuery, userQuery, friendQuery;
+  var store, data, commentQuery, userQuery, friendQuery, commentsRelation, userRelation, friends;
 
   beforeEach(() => {
     data = {
@@ -158,40 +158,61 @@ describe('relations', () => {
     store = hedy(memAdapter(data));
     commentQuery = store('comment');
     userQuery = store('user');
-    friendQuery = store('friend');
-  });
+    friendQuery = store('friend').pk(['user1Id', 'user2Id']);
 
-  it('allow to add hasMany relation to query', () => {
-    return userQuery.withRelated(hedy.hasMany(commentQuery)).then(function(user) {
-      expect(user[0].comments).to.eql([data.comment[2]]);
-    });
-  });
+    commentsRelation = hedy.hasMany(commentQuery);
+    userRelation = hedy.belongsTo(userQuery);
 
-  it('allow to add hasOne relation to query', () => {
-    return userQuery.withRelated(hedy.hasOne(commentQuery)).then(function(user) {
-      expect(user[0].comment).to.eql(data.comment[2]);
-    });
-  });
-
-  it('allow to add belongsTo relation to query', () => {
-    return commentQuery.withRelated(hedy.belongsTo(userQuery)).then(function(comments) {
-      expect(comments[0].user).to.eql(data.user[1]);
-    });
-  });
-
-  it('allow to add manyToMany relation to query', () => {
-    var friends = hedy.hasManyThrough(userQuery, friendQuery, {
+    friends = hedy.hasManyThrough(userQuery, friendQuery, {
       fromFk: 'user1Id',
       toFk: 'user2Id'
     });
-    return userQuery.withRelated(friends).then(function(user) {
-      expect(user[0].friends[0].name).to.eql(data.user[1].name);
+  });
+
+  describe('fetch stuff', () => {
+    it('should allow to add hasMany relation to query', () => {
+      return userQuery.withRelated(commentsRelation).then(function(user) {
+        expect(user[0].comments).to.eql([data.comment[2]]);
+      });
+    });
+
+    it('should allow to add hasOne relation to query', () => {
+      return userQuery.withRelated(hedy.hasOne(commentQuery)).then(function(user) {
+        expect(user[0].comment).to.eql(data.comment[2]);
+      });
+    });
+
+    it('should allow to add belongsTo relation to query', () => {
+      return commentQuery.withRelated(userRelation).then(function(comments) {
+        expect(comments[0].user).to.eql(data.user[1]);
+      });
+    });
+
+    it('should allow to add manyToMany relation to query', () => {
+      return userQuery.withRelated(friends).then(function(user) {
+        expect(user[0].friends[0].name).to.eql(data.user[1].name);
+      });
+    });
+
+    it('should allow set aliases for relation', () => {
+      return commentQuery.withRelated(userRelation.as('author')).then(function(comments) {
+        expect(comments[0].author).to.eql(data.user[1]);
+      });
     });
   });
 
-  it('allow set aliases for relation', () => {
-    return commentQuery.withRelated(hedy.belongsTo(userQuery).as('author')).then(function(comments) {
-      expect(comments[0].author).to.eql(data.user[1]);
+  describe('post stuff', () => {
+    it('should allow to link two objects', () => {
+      var user1 = { id: 1 };
+      var user3 = { id: 3 };
+      friends.link(user1, user3).then(function(friendship) {
+        expect(friendship.user1Id).to.eql(user1.id);
+        expect(friendship.user2Id).to.eql(user3.id);
+        return userQuery.get(user1.id).withRelated(friends);
+      }).then(fetchedUser => {
+        expect(fetchedUser.friends).to.have.length(2);
+        expect(fetchedUser.friends[1].id).to.eql(user3.id);
+      });
     });
   });
 });

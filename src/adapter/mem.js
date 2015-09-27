@@ -1,9 +1,22 @@
 'use strict';
+
 var every = require('lodash/collection/every');
 var clone = require('lodash/lang/clone');
 var isArray = require('lodash/lang/isArray');
+var isArray = require('lodash/lang/isArray');
 var remove = require('lodash/array/remove');
 var Promise = require('bluebird');
+
+const PK_DELIMITER = ':::';
+
+function getPk(pkKey, item) {
+  if (!isArray(pkKey)) {
+    return item[pkKey];
+  }
+  return pkKey.map(function(key) {
+    return item[key];
+  }).join(PK_DELIMITER);
+}
 
 module.exports = function(data) {
 
@@ -39,9 +52,11 @@ module.exports = function(data) {
   function post(options) {
     var list = data[options.tableName];
     var item = list.find(function(item) {
-      return item.id === options.id;
+      return getPk(options.pk, item) === getPk(options.pk, options.data);
     });
-    remove(list, item);
+    if (item) {
+      throw Error('Item with key ' + getPk(options.pk, options.data) + 'already exists');
+    }
     list.push(options.data);
     return options.data;
   }
@@ -49,9 +64,11 @@ module.exports = function(data) {
   function put(options) {
     var list = data[options.tableName];
     var item = list.find(function(item) {
-      return item.id === options.id;
+      return getPk(options.pk, item) === getPk(options.pk, options.data);
     });
-    remove(list, item);
+    if (item) {
+      remove(list, item);
+    }
     list.push(options.data);
     return options.data;
   }

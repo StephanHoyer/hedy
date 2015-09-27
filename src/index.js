@@ -82,6 +82,9 @@ module.exports = function(adapter, options) {
       },
 
       put: function(id, data) {
+        if (!data) {
+          throw new Error('no data provided for put');
+        }
         return evolve(query.merge({
           type: 'put',
           id: id,

@@ -15,13 +15,13 @@ function wrapApi(fn, options) {
 }
 
 function belongsTo(query, options) {
-  options = options || {};
+  options = merge({
+    query: query,
+    relationKey: query.table(),
+    fk: query.table() + 'Id',
+    pk: query.pk()
+  }, options);
   return wrapApi(function(list) {
-    options = merge({
-      relationKey: query.table(),
-      fk: query.table() + 'Id',
-      pk: query.pk()
-    }, options);
     return query
       .where(zip(options.pk, list.map(get(options.fk))))
       .indexBy(options.pk)
@@ -43,15 +43,15 @@ function belongsTo(query, options) {
 }
 
 function hasMany(query, options) {
-  options = options || {};
+  options = merge({
+    query: query,
+    relationKey: pluralize(query.table()),
+    pk: query.pk()
+  }, options);
   return wrapApi(function(list, parentQuery) {
-    options = merge({
-      relationKey: pluralize(query.table()),
-      fk: parentQuery.tableName + 'Id',
-      pk: query.pk()
-    }, options);
+    options.fk = options.fk || parentQuery.tableName + 'Id';
     return query
-      .where(zip(options.fk, list.map(get(options.pk))))
+      .where(zip(options.fk, list.map(get(parentQuery.pk))))
       .groupBy(options.fk)
       .then(relatedItemsByFK => {
         list.map(item => {
@@ -69,20 +69,27 @@ function hasManyThrough(query, throughQuery, options) {
     pk: options.toPk,
     relationKey: false
   });
-  return hasMany(throughQuery.withRelated(rightQuery), {
+  var relation = hasMany(throughQuery.withRelated(rightQuery), {
     fk: options.fromFk,
     pk: options.fromPk
   });
+  relation.link = function(itemA, itemB) {
+    var link = {};
+    link[options.fromFk] = itemA[options.fromPk || 'id'];
+    link[options.toFk] = itemB[options.toPk || 'id'];
+    return throughQuery.post(link);
+  };
+  return relation;
 }
 
 function hasOne(query, options) {
-  options = options || {};
+  options = merge({
+    relationKey: query.table(),
+    query: query,
+    pk: query.pk()
+  }, options);
   return wrapApi(function(list, parentQuery) {
-    options = merge({
-      relationKey: query.table(),
-      fk: parentQuery.tableName + 'Id',
-      pk: query.pk()
-    }, options);
+    options.fk = options.fk || parentQuery.tableName + 'Id';
     return query
       .where(zip(options.fk, list.map(get(options.pk))))
       .indexBy(options.fk)
