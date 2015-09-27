@@ -42,7 +42,7 @@ Unter the hood this is done using
 ## Fetch array of things
 
 ```javascript
-userQuery.where(where).then(function(users) {
+userQuery.where(where).then(users => {
   // Array of POJOs containing user data
 });
 ```
@@ -54,7 +54,7 @@ There are also some utility functions that might be usefull. They can be called
 on the query without actually fetching it.
 
 ```javascript
-userQuery.where(where).map(fn1).filter(fn2).then(function(users) {
+userQuery.where(where).map(fn1).filter(fn2).then(users => {
   // Array of POJOs containing user data
 });
 ```
@@ -65,24 +65,24 @@ they are applied to the query. They may return a promise.
 Because all that is lazy you might do the following:
 
 ```javascript
-var usersWithLongNames = userQuery.filter(function(user) {
+var usersWithLongNames = userQuery.filter(user => {
   return user.name.length > 10;
 })
 
-var femaleUsersWithLongNames = usersWithLongNames.filter(function(user) {
+var femaleUsersWithLongNames = usersWithLongNames.filter(user => {
   return user.gender === 'female'
 })
 
-var kidsWithLongNames = usersWithLongNames.filter(function(user) {
+var kidsWithLongNames = usersWithLongNames.filter(user => {
   return user.age < 10;
 })
 
-var namesOfKidsWithLongNames = kidsWithLongNames.map(function(user) {
+var namesOfKidsWithLongNames = kidsWithLongNames.map(user => {
   return user.name;
 });
 
 // if you now need the names of the kids:
-namesOfKidsWithLongNames.then(function(names) {
+namesOfKidsWithLongNames.then(names => {
   // there you have it.
 });
 ```
@@ -107,7 +107,7 @@ In this case we add the `pluck`-function of
 [lodash](https://lodash.com/docs#pluck). Now we can do
 
 ```javascript
-userQuery.pluck('name').then(function(usernames) {
+userQuery.pluck('name').then(usernames => {
   // usernames = ['heiner', 'klaus', 'birgit'];
 });
 ```
@@ -115,7 +115,7 @@ userQuery.pluck('name').then(function(usernames) {
 ## Fetch one thing
 
 ```javascript
-userQuery.get(id).then(function(user) {
+userQuery.get(id).then(user => {
   // POJO containing user data
 });
 ```
@@ -123,7 +123,7 @@ userQuery.get(id).then(function(user) {
 ## Create one thing
 
 ```javascript
-userQuery.post(data).then(function(user) {
+userQuery.post(data).then(user => {
   // POJO containing user data
 });
 ```
@@ -131,7 +131,7 @@ userQuery.post(data).then(function(user) {
 ## Update one thing
 
 ```javascript
-userQuery.put(id, data).then(function(user) {
+userQuery.put(id, data).then(user => {
   // POJO containing user data
 });
 ```
@@ -139,7 +139,7 @@ userQuery.put(id, data).then(function(user) {
 You can also patch stuff:
 
 ```javascript
-userQuery.patch(id, data).then(function(user) {
+userQuery.patch(id, data).then(user => {
   // POJO containing user data
 });
 ```
@@ -147,8 +147,7 @@ userQuery.patch(id, data).then(function(user) {
 ## delete one thing
 
 ```javascript
-userQuery.del(id).then(function() {
-});
+userQuery.del(id).then(() => ...)
 ```
 
 ## Relations
@@ -164,6 +163,10 @@ var data = {
     { id: 2, name: 'klaus' },
     { id: 3, name: 'manfred' }
   ],
+  friend: [
+    { user1Id: 1, user2Id: 2 },
+    { user1Id: 2, user2Id: 3 }
+  ],
   comment: [
     { id: 1, userId: 2, text: 'gorgeous' },
     { id: 2, userId: 3, text: 'nice' },
@@ -176,6 +179,7 @@ var store = hedy(adapter);
 
 var userQuery = store('user');
 var commentQuery = store('comment');
+var friendQuery = store('friend');
 ```
 
 Here we have a memory db containing users and their comments.
@@ -183,7 +187,7 @@ Here we have a memory db containing users and their comments.
 To fetch the users with the comments we do:
 
 ```javascript
-userQuery.withRelated(hedy.hasMany(commentQuery)).then(log);
+userQuery.withRelated(hedy.hasMany(commentQuery)).then(users => ...);
 ```
 
 As you see, we use a helper to declare a to-many-relation and give a query as
@@ -197,10 +201,40 @@ var pgQuery = hedy(pgAdapter(config));
 var userQuery = memQuery('user');
 var commentQuery = pgQuery('comment');
 
-userQuery.withRelated(hedy.hasMany(commentQuery)).then(log);
+userQuery.withRelated(hedy.hasMany(commentQuery)).then(users => ...);
 ```
 
 For a more advanced example see the examples in the examples folder.
+
+### Has-many
+
+```javascript
+userQuery.withRelated(hedy.hasMany(commentQuery)).then(users => ...)
+```
+
+### Has-one
+
+**TODO** Add example
+
+### Belongs-to
+
+```javascript
+commentQuery.withRelated(hedy.belongsTo(userQuery)).then(comments => ...)
+```
+
+### Many-to-many
+
+```javascript
+user.withRelated(hedy.hasManyThrough(userQuery, friendQuery)).then(users => ...)
+```
+
+For *many-to-many*-Relations there are two helper functions to create and delete
+them:
+
+```javascript
+friends.link(userA, userB).then(friendship => ...)
+friends.unlink(userA, userB).then(() => ...)
+```
 
 ## Current state
 
