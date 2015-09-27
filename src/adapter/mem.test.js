@@ -4,9 +4,8 @@ const expect = require('expect.js');
 const hedy = require('../');
 const memAdapter = require('./mem');
 
-
 describe('mem-adapter', () => {
-  var data, store, userQuery, commentQuery;
+  var data, store, userQuery, commentQuery, friendQuery;
 
   beforeEach(() => {
     data = {
@@ -14,6 +13,10 @@ describe('mem-adapter', () => {
         { id: 1, name: 'heiner', age: 20 },
         { id: 2, name: 'klaus', age: 27 },
         { id: 3, name: 'manfred', age: 30 }
+      ],
+      friend: [
+        { user1Id: 1, user2Id: 2 },
+        { user1Id: 2, user2Id: 3 }
       ],
       comment: [
         { id: 1, userId: 2, text: 'gorgeous' },
@@ -25,7 +28,7 @@ describe('mem-adapter', () => {
     store = hedy(memAdapter(data));
     userQuery = store('user');
     commentQuery = store('comment');
-
+    friendQuery = store('friend').pk(['user1Id', 'user2Id']);
   });
 
   describe('get', () => {
@@ -62,6 +65,12 @@ describe('mem-adapter', () => {
     it('should fetch one by id', () => {
       return userQuery.get(3).then((user) => {
         expect(user).to.eql(data.user[2]);
+      });
+    });
+
+    it('should fetch one by combined id', () => {
+      return friendQuery.get([2, 3]).then((friendship) => {
+        expect(friendship).to.eql(data.friend[1]);
       });
     });
   });

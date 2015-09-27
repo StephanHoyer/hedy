@@ -24,11 +24,9 @@ function belongsTo(query, options) {
   return wrapApi(function(list) {
     return query
       .where(zip(options.pk, list.map(get(options.fk))))
-      .indexBy(options.pk)
-      .then(relatedItemsByPK => {
+      .then(relatedItems => {
         list.map(item => {
-          var relatedItem = relatedItemsByPK[item[options.fk]];
-
+          var relatedItem = relatedItems.find(relatedItem => relatedItem[options.pk[0]] === item[options.fk]);
           if (options.relationKey === false) {
             // colapse mode: Properties of related items are mixed into item
             // This is e. G. used by the hasManyThrough relation
@@ -64,8 +62,8 @@ function hasMany(query, options) {
 
 function hasManyThrough(query, throughQuery, options) {
   options = merge({
-    fromPk: 'id',
-    toPk: 'id'
+    fromPk: ['id'],
+    toPk: ['id']
   }, options);
   var rightQuery = belongsTo(query, {
     fk: options.toFk,
@@ -74,12 +72,12 @@ function hasManyThrough(query, throughQuery, options) {
   });
   var relation = hasMany(throughQuery.withRelated(rightQuery), {
     fk: options.fromFk,
-    pk: options.fromPk
   });
   relation.link = function(itemA, itemB) {
     var link = {};
     link[options.fromFk] = itemA[options.fromPk];
     link[options.toFk] = itemB[options.toPk];
+
     return throughQuery.post(link);
   };
   relation.unlink = function(itemA, itemB) {

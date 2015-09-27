@@ -30,7 +30,7 @@ describe('basics', () => {
 
   it('should allow to create user store', () => {
     return store('user').pk('hulu').then(function(options) {
-      expect(options.pk).to.be('hulu');
+      expect(options.pk).to.eql(['hulu']);
       expect(options.tableName).to.be('user');
     });
   });
@@ -225,4 +225,7 @@ describe('relations', () => {
       });
     });
   });
+});
+
+describe('combined pk', () => {
 });

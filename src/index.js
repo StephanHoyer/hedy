@@ -10,9 +10,10 @@ var map = require('lodash/collection/map');
 var filter = require('lodash/collection/filter');
 var groupBy = require('lodash/collection/groupBy');
 var indexBy = require('lodash/collection/indexBy');
+var zipObject = require('lodash/array/zipObject');
+var isArray = require('lodash/lang/isArray');
 
 var relations = require('./relations');
-var zip = require('./util').zip;
 
 function isArray(thing) {
   return Object.prototype.toString.call(thing) === '[object Array]';
@@ -20,6 +21,9 @@ function isArray(thing) {
 
 module.exports = function(adapter, options) {
 
+  if (options && options.pk && !isArray(options.pk)) {
+    options.pk = [options.pk];
+  }
   options = merge({
     methods: {
       map: map,
@@ -30,6 +34,10 @@ module.exports = function(adapter, options) {
   }, options);
 
   function evolve(query) {
+
+    function whereFromId(id) {
+      return zipObject(query.get('pk'), isArray(id) ? id : [id]);
+    }
 
     function attachConverter(converter) {
       return function(fn) {
@@ -51,7 +59,7 @@ module.exports = function(adapter, options) {
 
       pk: function(pk) {
         if (pk) {
-          return evolve(query.set('pk', pk));
+          return evolve(query.set('pk', isArray(pk) ? pk : [pk]));
         }
         return query.get('pk');
       },
@@ -60,7 +68,7 @@ module.exports = function(adapter, options) {
         return evolve(query.merge({
           limit: 1,
           returnArray: false,
-          where: zip(query.get('pk'), id)
+          where: whereFromId(id)
         }));
       },
 
@@ -87,7 +95,7 @@ module.exports = function(adapter, options) {
         }
         return evolve(query.merge({
           type: 'put',
-          id: id,
+          where: whereFromId(id),
           data: data
         }));
       },
@@ -95,7 +103,7 @@ module.exports = function(adapter, options) {
       patch: function(id, data) {
         return evolve(query.merge({
           type: 'patch',
-          id: id,
+          where: whereFromId(id),
           data: data
         }));
       },
@@ -110,7 +118,7 @@ module.exports = function(adapter, options) {
       del: function(id) {
         return evolve(query.merge({
           type: 'del',
-          id: id
+          where: whereFromId(id)
         }));
       },
 
@@ -140,7 +148,7 @@ module.exports = function(adapter, options) {
     return evolve(iMap({
       type: 'get',
       tableName: tableName,
-      pk: 'id',
+      pk: ['id'],
       where: iMap(),
       converter: iList(),
       withRelated: iList(),
