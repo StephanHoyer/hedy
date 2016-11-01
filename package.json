@@ -22,13 +22,13 @@
   },
   "homepage": "https://github.com/StephanHoyer/hedy",
   "devDependencies": {
-    "mocha": "^2.3.2",
+    "mocha": "^3.1.2",
     "expect.js": "^0.3.1"
   },
   "dependencies": {
-    "bluebird": "^2.10.0",
+    "bluebird": "^3.4.6",
     "immutable": "^3.7.5",
-    "lodash": "^3.10.1",
-    "pluralize": "^1.2.1"
+    "lodash": "^4.16.5",
+    "pluralize": "^3.0.0"
   }
 }
