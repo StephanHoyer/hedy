@@ -53,6 +53,12 @@ module.exports = function(adapter, options = {}) {
         return query.tableName
       },
 
+      columns(columns) {
+        if (isArray(columns)) {
+          columns = zipObject(columns, columns)
+        }
+        return evolve(query, { columns: O(columns) })
+      },
       pk(pk) {
         if (pk) {
           return evolve(query, {
@@ -142,6 +148,7 @@ module.exports = function(adapter, options = {}) {
       converter: [],
       withRelated: [],
       returnArray: true,
+      columns: {},
     })
   }
   return store

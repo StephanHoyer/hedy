@@ -4,6 +4,8 @@ const every = require('lodash/every')
 const clone = require('lodash/clone')
 const isArray = require('lodash/isArray')
 const remove = require('lodash/remove')
+const isEmpty = require('lodash/isEmpty')
+const mapValues = require('lodash/mapValues')
 
 module.exports = function(data) {
   function where(tableName, whereCondition) {
@@ -25,7 +27,13 @@ module.exports = function(data) {
       }
       list = [list[0]]
     }
-    list = list.map(clone)
+    if (!isEmpty(query.columns)) {
+      list = list.map(i =>
+        mapValues(query.columns, columnName => i[columnName])
+      )
+    } else {
+      list = list.map(clone)
+    }
     await Promise.all(query.withRelated.map(relation => relation(list, query)))
     for (const converter of query.converter) {
       list = await converter(list)

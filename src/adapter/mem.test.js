@@ -65,6 +65,24 @@ describe('mem-adapter', function() {
       const friendship = await friendQuery.get([2, 3])
       expect(friendship).to.eql(data.friend[1])
     })
+
+    it('should only select certain columns', async function() {
+      const user = await userQuery.columns(['name']).get(3)
+      expect(user).to.eql({ name: data.user[2].name })
+    })
+
+    it('should alias columns', async function() {
+      const user = await userQuery.columns({ NamE: 'name' }).get(3)
+      expect(user).to.eql({ NamE: data.user[2].name })
+    })
+
+    it('should alias columns', async function() {
+      const user = await userQuery
+        .columns({ NamE: 'name' })
+        .columns({ ID: 'id' })
+        .get(3)
+      expect(user).to.eql({ ID: data.user[2].id, NamE: data.user[2].name })
+    })
   })
 
   describe('first', function() {

@@ -76,7 +76,9 @@ const femaleUsersWithLongNames = usersWithLongNames.filter(
 
 const kidsWithLongNames = usersWithLongNames.filter(user => user.age < 10)
 
-const namesOfKidsWithLongNames = kidsWithLongNames.map(user => user.name)
+const namesOfKidsWithLongNames = kidsWithLongNames
+  .columns(['name'])
+  .map(user => user.name)
 
 // if you now need the names of the kids:
 // there you have it.
@@ -119,6 +121,16 @@ const user = await userQuery.get(id)
 ```javascript
 // POJO containing user data
 const user = await userQuery.where(where).first()
+```
+
+## select columns (with aliasing)
+
+```javascript
+// POJO containing username under `localName`
+const user = await userQuery
+  .columns({ localName: columnNameInDb })
+  .where(where)
+  .get(1)
 ```
 
 ## Counting
