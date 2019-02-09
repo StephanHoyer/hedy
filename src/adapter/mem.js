@@ -1,87 +1,79 @@
-'use strict';
+'use strict'
 
-var every = require('lodash/collection/every');
-var clone = require('lodash/lang/clone');
-var isArray = require('lodash/lang/isArray');
-var remove = require('lodash/array/remove');
-var Promise = require('bluebird');
+const every = require('lodash/every')
+const clone = require('lodash/clone')
+const isArray = require('lodash/isArray')
+const remove = require('lodash/remove')
 
 module.exports = function(data) {
-
   function where(tableName, whereCondition) {
-    return data[tableName].filter(entity => {
-      return every(whereCondition, (value, key) => {
+    return data[tableName].filter(entity =>
+      every(whereCondition, (value, key) => {
         if (isArray(value)) {
-          return value.indexOf(entity[key]) >= 0;
+          return value.indexOf(entity[key]) >= 0
         }
-        return entity[key] === value;
-      });
-    });
+        return entity[key] === value
+      })
+    )
   }
 
-  function get(options) {
-    var list = where(options.tableName, options.where);
-    if (!options.returnArray) {
+  async function get(query) {
+    let list = where(query.tableName, query.where)
+    if (!query.returnArray) {
       if (!list.length) {
-        throw new Error('No item found');
+        throw new Error('No item found')
       }
-      list = [list[0]];
+      list = [list[0]]
     }
-    list = list.map(clone);
-
-    var listPromise = Promise.all(options.withRelated.map(relation => relation(list, options)));
-
-    if (!options.returnArray) {
-      return listPromise.then(() => list[0]);
+    list = list.map(clone)
+    await Promise.all(query.withRelated.map(relation => relation(list, query)))
+    for (const converter of query.converter) {
+      list = await converter(list)
     }
 
-    return listPromise
-      .then(() => Promise.reduce(options.converter, function(list, handler) {
-        return handler(list);
-      }, list));
+    return query.returnArray ? list : list[0]
   }
 
-  function post(options) {
-    options.where = {};
-    options.pk.map(key => options.where[key] = options.data[key]);
-    var item = where(options.tableName, options.where)[0];
+  function post(query) {
+    query.where = {}
+    query.pk.map(key => (query.where[key] = query.data[key]))
+    const item = where(query.tableName, query.where)[0]
     if (item) {
-      throw Error('Item with key ' + options.data + ' already exists');
+      throw Error(`Item with key ${query.data} already exists`)
     }
-    data[options.tableName].push(options.data);
-    return options.data;
+    data[query.tableName].push(query.data)
+    return query.data
   }
 
-  function put(options) {
-    var list = data[options.tableName];
-    var item = where(options.tableName, options.where)[0];
+  function put(query) {
+    const list = data[query.tableName]
+    const item = where(query.tableName, query.where)[0]
     if (item) {
-      remove(list, item);
+      remove(list, item)
     }
-    list.push(options.data);
-    return options.data;
+    list.push(query.data)
+    return query.data
   }
 
-  function patch(options) {
-    var item = where(options.tableName, options.where)[0];
-    Object.assign(item, options.data);
-    return item;
+  function patch(query) {
+    const item = where(query.tableName, query.where)[0]
+    Object.assign(item, query.data)
+    return item
   }
 
-  function del(options) {
-    var item = where(options.tableName, options.where)[0];
+  function del(query) {
+    const item = where(query.tableName, query.where)[0]
     if (!item) {
-      throw Error('Item with key ' + options.where + ' does not exist');
+      throw Error(`Item with key ${query.where} does not exist`)
     }
-    remove(data[options.tableName], item);
+    remove(data[query.tableName], item)
   }
 
   return {
-    get: get,
-    put: put,
-    patch: patch,
-    post: post,
-    del: del
-  };
-
-};
+    get,
+    put,
+    patch,
+    post,
+    del,
+  }
+}

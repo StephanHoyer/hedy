@@ -21,14 +21,12 @@
     "url": "https://github.com/StephanHoyer/fnorm/issues"
   },
   "homepage": "https://github.com/StephanHoyer/hedy",
-  "devDependencies": {
-    "mocha": "^2.3.2",
-    "expect.js": "^0.3.1"
-  },
+  "devDependencies": {},
   "dependencies": {
-    "bluebird": "^2.10.0",
-    "immutable": "^3.7.5",
-    "lodash": "^3.10.1",
-    "pluralize": "^1.2.1"
+    "expect.js": "0.3.1",
+    "lodash": "4.17.11",
+    "mocha": "5.2.0",
+    "patchinko": "4.1.0",
+    "pluralize": "7.0.0"
   }
 }

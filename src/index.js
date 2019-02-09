@@ -1,162 +1,150 @@
-'use strict';
+'use strict'
 
-var Immutable = require('immutable');
-var iMap = Immutable.Map;
-var iList = Immutable.List;
-var Promise = require('bluebird');
-var merge = require('lodash/object/merge');
-var map = require('lodash/collection/map');
-var map = require('lodash/collection/map');
-var filter = require('lodash/collection/filter');
-var groupBy = require('lodash/collection/groupBy');
-var indexBy = require('lodash/collection/indexBy');
-var zipObject = require('lodash/array/zipObject');
-var isArray = require('lodash/lang/isArray');
+const map = require('lodash/map')
+const filter = require('lodash/filter')
+const groupBy = require('lodash/groupBy')
+const keyBy = require('lodash/keyBy')
+const zipObject = require('lodash/zipObject')
+const isArray = require('lodash/isArray')
+const O = require('patchinko/immutable')
+const relations = require('./relations')
 
-var relations = require('./relations');
-
-function isArray(thing) {
-  return Object.prototype.toString.call(thing) === '[object Array]';
-}
-
-module.exports = function(adapter, options) {
-
+module.exports = function(adapter, options = {}) {
   if (options && options.pk && !isArray(options.pk)) {
-    options.pk = [options.pk];
+    options.pk = [options.pk]
   }
-  options = merge({
-    methods: {
-      map: map,
-      filter: filter,
-      groupBy: groupBy,
-      indexBy: indexBy
-    }
-  }, options);
+  options = O(
+    {
+      methods: {
+        map,
+        filter,
+        groupBy,
+        keyBy,
+      },
+    },
+    { methods: O(options.methods) }, // patch methods
+    O(options, {
+      // patch rest
+      methods: O,
+    })
+  )
 
-  function evolve(query) {
+  function evolve(query, patch) {
+    query = O(query, patch)
 
     function whereFromId(id) {
-      return zipObject(query.get('pk'), isArray(id) ? id : [id]);
+      return zipObject(query.pk, isArray(id) ? id : [id])
     }
 
     function attachConverter(converter) {
-      return function(fn) {
-        return evolve(query.updateIn(['converter'], function(converters) {
-          return converters.push(function(result) {
-            return converter(result, fn);
-          });
-        }));
-      };
+      return fn =>
+        evolve(query, {
+          converter: O(converters =>
+            converters.concat(result => converter(result, fn))
+          ),
+        })
     }
 
-    var api = {
-      table: function(name) {
+    const api = {
+      table(name) {
         if (name) {
-          return evolve(query.set('tableName'), name);
+          return evolve(query, { tableName: name })
         }
-        return query.get('tableName');
+        return query.tableName
       },
 
-      pk: function(pk) {
+      pk(pk) {
         if (pk) {
-          return evolve(query.set('pk', isArray(pk) ? pk : [pk]));
+          return evolve(query, {
+            pk: isArray(pk) ? pk : [pk],
+          })
         }
-        return query.get('pk');
+        return query.pk
       },
 
-      get: function(id) {
-        return evolve(query.merge({
+      get(id) {
+        return evolve(query, {
           limit: 1,
           returnArray: false,
-          where: whereFromId(id)
-        }));
+          where: whereFromId(id),
+        }).load()
       },
 
-      where: function(where) {
-        return evolve(query.set('where', where));
+      where(where) {
+        return evolve(query, { where })
       },
 
-      withRelated: function(relation) {
-        return evolve(query.updateIn(['withRelated'], function(withRelated) {
-          if (isArray(relation)) {
-            return withRelated.concat(relation);
-          }
-          return withRelated.push(relation);
-        }));
+      withRelated(relation) {
+        return evolve(query, {
+          withRelated: O(withRelated => withRelated.concat(relation)),
+        })
       },
 
-      count: function() {
-        return evolve(query.set('count', true));
+      count() {
+        return evolve(query, { count: true }).load()
       },
 
-      put: function(id, data) {
+      first() {
+        return evolve(query, { limit: 1, returnArray: false }).load()
+      },
+
+      put(id, data) {
         if (!data) {
-          throw new Error('no data provided for put');
+          throw new Error('no data provided for put')
         }
-        return evolve(query.merge({
+        return evolve(query, {
           type: 'put',
           where: whereFromId(id),
-          data: data
-        }));
+          data,
+        }).load()
       },
 
-      patch: function(id, data) {
-        return evolve(query.merge({
+      patch(id, data) {
+        return evolve(query, {
           type: 'patch',
           where: whereFromId(id),
-          data: data
-        }));
+          data,
+        }).load()
       },
 
-      post: function(data) {
-        return evolve(query.merge({
+      post(data) {
+        return evolve(query, {
           type: 'post',
-          data: data
-        }));
+          data,
+        }).load()
       },
 
-      del: function(id) {
-        return evolve(query.merge({
+      del(id) {
+        return evolve(query, {
           type: 'del',
-          where: whereFromId(id)
-        }));
+          where: whereFromId(id),
+        }).load()
       },
 
-      then: function(resolve, reject) {
-        return Promise
-          .resolve(query.toJS())
-          .then(adapter[query.get('type')])
-          .then(resolve, reject);
+      load() {
+        return adapter[query.type](query)
       },
-
-      catch: function(reject) {
-        return Promise
-          .resolve(query.toJS())
-          .then(adapter.get)
-          .catch(reject);
-      }
-    };
+    }
 
     map(options.methods, function(method, name) {
-      api[name] = attachConverter(method);
-    });
+      api[name] = attachConverter(method)
+    })
 
-    return api;
+    return api
   }
 
   function store(tableName) {
-    return evolve(iMap({
+    return evolve({
       type: 'get',
-      tableName: tableName,
+      tableName,
       pk: ['id'],
-      where: iMap(),
-      converter: iList(),
-      withRelated: iList(),
-      returnArray: true
-    }));
+      where: [],
+      converter: [],
+      withRelated: [],
+      returnArray: true,
+    })
   }
+  return store
+}
 
-  return store;
-};
-
-Object.assign(module.exports, relations);
+Object.assign(module.exports, relations)

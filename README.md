@@ -12,10 +12,10 @@ We want to fix this!
 ## Initialisation
 
 ```javascript
-var hedy = require('hedy');
-var mem = require('hedy/adapter/mem');
+const hedy = require('hedy')
+const mem = require('hedy/adapter/mem')
 
-var store = hedy(adapter);
+const store = hedy(adapter)
 ```
 
 The `adapter` is a function that is called when a query is fired. It gets
@@ -31,60 +31,56 @@ See the existing adapters how this works.
 ..., we just call it `query`.
 
 ```javascript
-var userQuery = store('user') // 'user' is the tablename
+const userQuery = store('user') // 'user' is the tablename
 ```
 
 The `query` is a monad-ish structure. You can call methods on it and it returns
 another query with the method applied. The original query remains untouched.
 Unter the hood this is done using
-[immutable.js](https://facebook.github.io/immutable-js/).
+[patchinko](https://github.com/barneycarroll/patchinko).
 
 ## Fetch array of things
 
 ```javascript
-userQuery.where(where).then(users => {
-  // Array of POJOs containing user data
-});
+// Array of POJOs containing user data
+const users = await userQuery.where(where).load()
 ```
 
 The where can be omitted, in this case all items where fetched. The query will
-only run, if you call `then` on it. This allows lazily fetch things.
+only run, if you call `load` on it.
 
 There are also some utility functions that might be usefull. They can be called
 on the query without actually fetching it.
 
 ```javascript
-userQuery.where(where).map(fn1).filter(fn2).then(users => {
-  // Array of POJOs containing user data
-});
+// Array of POJOs containing user data
+const users = await userQuery
+  .where(where)
+  .map(fn1)
+  .filter(fn2)
+  .load()
+})
 ```
 
-The map and filter will be applied onto the fetched collection in the order as
+The `map` and `filter` will be applied onto the fetched collection in the order as
 they are applied to the query. They may return a promise.
 
 Because all that is lazy you might do the following:
 
 ```javascript
-var usersWithLongNames = userQuery.filter(user => {
-  return user.name.length > 10;
-})
+const usersWithLongNames = userQuery.filter(user => user.name.length > 10)
 
-var femaleUsersWithLongNames = usersWithLongNames.filter(user => {
-  return user.gender === 'female'
-})
+const femaleUsersWithLongNames = usersWithLongNames.filter(
+  user => user.gender === 'female'
+)
 
-var kidsWithLongNames = usersWithLongNames.filter(user => {
-  return user.age < 10;
-})
+const kidsWithLongNames = usersWithLongNames.filter(user => user.age < 10)
 
-var namesOfKidsWithLongNames = kidsWithLongNames.map(user => {
-  return user.name;
-});
+const namesOfKidsWithLongNames = kidsWithLongNames.map(user => user.name)
 
 // if you now need the names of the kids:
-namesOfKidsWithLongNames.then(names => {
-  // there you have it.
-});
+// there you have it.
+const names = await namesOfKidsWithLongNames.load()
 ```
 
 Sure, in some of those cases the database might do the heavy lifting, but there are
@@ -96,90 +92,97 @@ Currently there are only a few methods build in: `map`, `reduce`, `groupBy`,
 `pluck` might be a good choice to get the user name:
 
 ```javascript
-var store = hedy(adapter, {
+const store = hedy(adapter, {
   methods: {
-    pluck: require('lodash/collection/pluck');
-  }
-});
+    pluck: require('lodash/collection/pluck'),
+  },
+})
 ```
 
 In this case we add the `pluck`-function of
 [lodash](https://lodash.com/docs#pluck). Now we can do
 
 ```javascript
-userQuery.pluck('name').then(usernames => {
-  // usernames = ['heiner', 'klaus', 'birgit'];
-});
+const usernames = await .pluck('name').load()
+// usernames = ['heiner', 'klaus', 'birgit']
 ```
 
-## Fetch one thing
+## Fetch one thing by pk
 
 ```javascript
-userQuery.get(id).then(user => {
-  // POJO containing user data
-});
+// POJO containing user data
+const user = await userQuery.get(id)
+```
+
+## Fetch one first
+
+```javascript
+// POJO containing user data
+const user = await userQuery.where(where).first()
+```
+
+## Counting
+
+```javascript
+// POJO containing a number
+const count = await userQuery.count()
 ```
 
 ## Create one thing
 
 ```javascript
-userQuery.post(data).then(user => {
-  // POJO containing user data
-});
+// POJO containing user data
+const user = await userQuery.post(data)
 ```
 
 ## Update one thing
 
 ```javascript
-userQuery.put(id, data).then(user => {
-  // POJO containing user data
-});
+// POJO containing user data
+const user = await userQuery.put(id, data)
+})
 ```
 
 You can also patch stuff:
 
 ```javascript
-userQuery.patch(id, data).then(user => {
-  // POJO containing user data
-});
+// POJO containing user data
+const user = await userQuery.patch(id, data)
 ```
 
 ## delete one thing
 
 ```javascript
-userQuery.del(id).then(() => ...)
+await userQuery.del(id)
 ```
 
 ## Relations
 
 Relations are a key part of ORMs. In most ORMs relations can only be in the same
-database. *Hedy* as a different approach on this. Relations are defined as
+database. _Hedy_ as a different approach on this. Relations are defined as
 querys. Let's look at an example:
 
 ```javascript
-var data = {
+const data = {
   user: [
     { id: 1, name: 'heiner' },
     { id: 2, name: 'klaus' },
-    { id: 3, name: 'manfred' }
+    { id: 3, name: 'manfred' },
   ],
-  friend: [
-    { user1Id: 1, user2Id: 2 },
-    { user1Id: 2, user2Id: 3 }
-  ],
+  friend: [{ user1Id: 1, user2Id: 2 }, { user1Id: 2, user2Id: 3 }],
   comment: [
     { id: 1, userId: 2, text: 'gorgeous' },
     { id: 2, userId: 3, text: 'nice' },
     { id: 4, userId: 1, text: 'splended' },
-    { id: 5, userId: 2, text: 'awesome' }
-  ]
-};
-var adapter = memAdapter(data);
-var store = hedy(adapter);
+    { id: 5, userId: 2, text: 'awesome' },
+  ],
+}
+const adapter = memAdapter(data)
+const store = hedy(adapter)
 
-var userQuery = store('user');
-var commentQuery = store('comment');
-var friendQuery = store('friend');
+const userQuery = store('user')
+const commentQuery = store('comment')
+const friendQuery = store('friend')
 ```
 
 Here we have a memory db containing users and their comments.
@@ -187,7 +190,7 @@ Here we have a memory db containing users and their comments.
 To fetch the users with the comments we do:
 
 ```javascript
-userQuery.withRelated(hedy.hasMany(commentQuery)).then(users => ...);
+userQuery.withRelated(hedy.hasMany(commentQuery)).then(users => ...)
 ```
 
 As you see, we use a helper to declare a to-many-relation and give a query as
@@ -195,13 +198,13 @@ parameter. The query does not have to request to the same database, so this is
 perfectly possible.
 
 ```javascript
-var memQuery = hedy(memAdapter(data));
-var pgQuery = hedy(pgAdapter(config));
+const memQuery = hedy(memAdapter(data))
+const pgQuery = hedy(pgAdapter(config))
 
-var userQuery = memQuery('user');
-var commentQuery = pgQuery('comment');
+const userQuery = memQuery('user')
+const commentQuery = pgQuery('comment')
 
-userQuery.withRelated(hedy.hasMany(commentQuery)).then(users => ...);
+userQuery.withRelated(hedy.hasMany(commentQuery)).then(users => ...)
 ```
 
 For a more advanced example see the examples in the examples folder.
@@ -209,7 +212,7 @@ For a more advanced example see the examples in the examples folder.
 ### Has-many
 
 ```javascript
-userQuery.withRelated(hedy.hasMany(commentQuery)).then(users => ...)
+const users = await userQuery.withRelated(hedy.hasMany(commentQuery)).load()
 ```
 
 ### Has-one
@@ -219,21 +222,25 @@ userQuery.withRelated(hedy.hasMany(commentQuery)).then(users => ...)
 ### Belongs-to
 
 ```javascript
-commentQuery.withRelated(hedy.belongsTo(userQuery)).then(comments => ...)
+const comments = await commentQuery
+  .withRelated(hedy.belongsTo(userQuery))
+  .load()
 ```
 
 ### Many-to-many
 
 ```javascript
-user.withRelated(hedy.hasManyThrough(userQuery, friendQuery)).then(users => ...)
+const users = await user
+  .withRelated(hedy.hasManyThrough(userQuery, friendQuery))
+  .load()
 ```
 
-For *many-to-many*-Relations there are two helper functions to create and delete
+For _many-to-many_-Relations there are two helper functions to create and delete
 them:
 
 ```javascript
-friends.link(userA, userB).then(friendship => ...)
-friends.unlink(userA, userB).then(() => ...)
+const friendship = await friends.link(userA, userB)
+await friends.unlink(userA, userB)
 ```
 
 ## Current state
@@ -248,4 +255,4 @@ If you have any ideas, feel free to create a PR/Issue.
 
 ## links
 
-* Pretty similar attempt to *hedy* by the bookshelf maintainer: https://github.com/rhys-vdw/data-mapper
+- Pretty similar attempt to _hedy_ by the bookshelf maintainer: https://github.com/rhys-vdw/data-mapper

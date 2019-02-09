@@ -1,21 +1,15 @@
-'use strict';
+'use strict'
 
-var isArray = require('lodash/lang/isArray');
+const isArray = require('lodash/isArray')
 
 module.exports = {
-  zip: (key, value) => {
-    var obj = {};
-    obj[key] = value;
-    return obj;
-  },
-
   whereFromPk: (options, item) => {
-    var where = {};
+    const where = {}
     if (isArray(options.pk)) {
-      options.pk.map(key => where[key] = item[key]);
+      options.pk.map(key => (where[key] = item[key]))
     } else {
-      where[options.pk] = item[options.pk];
+      where[options.pk] = item[options.pk]
     }
-    return where;
-  }
-};
+    return where
+  },
+}
