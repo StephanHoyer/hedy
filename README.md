@@ -105,7 +105,7 @@ In this case we add the `pluck`-function of
 [lodash](https://lodash.com/docs#pluck). Now we can do
 
 ```javascript
-const usernames = await .pluck('name').load()
+const usernames = await userQuery.pluck('name').load()
 // usernames = ['heiner', 'klaus', 'birgit']
 ```
 
