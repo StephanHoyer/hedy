@@ -39,6 +39,21 @@ describe('mem-adapter', function() {
       expect(users).to.eql([data.user[0]])
     })
 
+    it('should be abble to reuse query (immutability)', async function() {
+      const allQuery = userQuery
+      const heinerQuery = userQuery.where({ name: 'heiner' })
+      const agedHeinerQuery = heinerQuery.where({ age: 100 })
+
+      const agedHeinerUsers = await agedHeinerQuery.load()
+      expect(agedHeinerUsers).to.have.length(0)
+
+      const allUsers = await allQuery.load()
+      expect(allUsers).to.eql(data.user)
+
+      const heinerUsers = await heinerQuery.load()
+      expect(heinerUsers[0]).to.eql(data.user[0])
+    })
+
     it('should allow to filter many (WHERE IN)', async function() {
       const users = await userQuery.where({ name: ['klaus', 'heiner'] }).load()
       expect(users).to.eql([data.user[0], data.user[1]])
