@@ -112,54 +112,53 @@ const usernames = await userQuery.pluck('name').load()
 ## Fetch one thing by pk
 
 ```javascript
-// POJO containing user data
 const user = await userQuery.get(id)
+// user = { id: 1, name: 'Heiner' }
 ```
 
 ## Fetch one first
 
 ```javascript
-// POJO containing user data
 const user = await userQuery.where(where).first()
+// user = { id: 1, name: 'Heiner' }
 ```
 
 ## select columns (with aliasing)
 
 ```javascript
-// POJO containing username under `localName`
 const user = await userQuery
-  .columns({ localName: columnNameInDb })
+  .columns({ username: 'name' })
   .where(where)
   .get(1)
+// user = { id: 1, username: 'Heiner' }
 ```
 
 ## Counting
 
 ```javascript
-// POJO containing a number
 const count = await userQuery.count()
+// count = 5
 ```
 
 ## Create one thing
 
 ```javascript
-// POJO containing user data
 const user = await userQuery.post(data)
+// user = { id: 1, name: 'Heiner' }
 ```
 
 ## Update one thing
 
 ```javascript
-// POJO containing user data
 const user = await userQuery.put(id, data)
-})
+// user = { id: 1, name: 'Heiner' }
 ```
 
 You can also patch stuff:
 
 ```javascript
-// POJO containing user data
 const user = await userQuery.patch(id, data)
+// user = { id: 1, name: 'Heiner' }
 ```
 
 ## delete one thing
